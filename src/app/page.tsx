@@ -25,27 +25,31 @@ export default function Home() {
   };
 
   const handleAddScore = (score: number, type: TurnScore['type']) => {
-    if (!gameState) return;
-
     setGameState((prev) => {
       if (!prev) return null;
-
-      const newPlayers = [...prev.players];
-      const currentPlayer = newPlayers[prev.currentPlayerIndex];
-      
-      const newScore: TurnScore = {
-        turnNumber: prev.round,
-        score,
-        isQwirkle: score >= 12,
-        type,
-      };
-      
-      currentPlayer.scores.push(newScore);
-      currentPlayer.totalScore = currentPlayer.scores.reduce((sum, s) => sum + s.score, 0);
-
-      const nextPlayerIndex = (prev.currentPlayerIndex + 1) % prev.players.length;
+  
+      const newPlayers = prev.players.map((player, index) => {
+        if (index === prev.currentPlayerIndex) {
+          const newScore: TurnScore = {
+            turnNumber: prev.round,
+            score,
+            isQwirkle: score >= 12,
+            type,
+          };
+          const updatedScores = [...player.scores, newScore];
+          const newTotalScore = updatedScores.reduce((sum, s) => sum + s.score, 0);
+          return {
+            ...player,
+            scores: updatedScores,
+            totalScore: newTotalScore,
+          };
+        }
+        return player;
+      });
+  
+      const nextPlayerIndex = (prev.currentPlayerIndex + 1) % newPlayers.length;
       const nextRound = nextPlayerIndex === 0 ? prev.round + 1 : prev.round;
-
+  
       return {
         ...prev,
         players: newPlayers,

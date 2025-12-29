@@ -38,22 +38,26 @@ function FileUpload({ onFileSelect, label }: { onFileSelect: (file: File) => voi
 
 
     const getCameraPermission = async () => {
-        try {
-        const stream = await navigator.mediaDevices.getUserMedia({video: true});
-        streamRef.current = stream;
-        setHasCameraPermission(true);
-
-        if (videoRef.current) {
-            videoRef.current.srcObject = stream;
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
+            streamRef.current = null;
         }
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({video: true});
+            streamRef.current = stream;
+            setHasCameraPermission(true);
+
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+            }
         } catch (error) {
-        console.error('Error accessing camera:', error);
-        setHasCameraPermission(false);
-        toast({
-            variant: 'destructive',
-            title: 'Camera Access Denied',
-            description: 'Please enable camera permissions in your browser settings to use this app.',
-        });
+            console.error('Error accessing camera:', error);
+            setHasCameraPermission(false);
+            toast({
+                variant: 'destructive',
+                title: 'Camera Access Denied',
+                description: 'Please enable camera permissions in your browser settings to use this app.',
+            });
         }
     };
 
@@ -61,20 +65,21 @@ function FileUpload({ onFileSelect, label }: { onFileSelect: (file: File) => voi
         if (streamRef.current) {
             streamRef.current.getTracks().forEach(track => track.stop());
             streamRef.current = null;
+            if(videoRef.current) {
+                videoRef.current.srcObject = null;
+            }
         }
     }
 
     useEffect(() => {
-        if (view === 'camera' && !streamRef.current) {
+        if (view === 'camera') {
             getCameraPermission();
-        } else if (view === 'upload') {
+        } else {
             stopCamera();
         }
 
         return () => {
-            if(view === 'camera') {
-                stopCamera();
-            }
+            stopCamera();
         }
     }, [view]);
 
@@ -135,17 +140,20 @@ function FileUpload({ onFileSelect, label }: { onFileSelect: (file: File) => voi
             )}
             {view === 'camera' && (
                 <div className="mt-1 space-y-2">
-                    <div className="w-full aspect-video rounded-md bg-black overflow-hidden">
-                        <video ref={videoRef} className="w-full h-full" autoPlay muted playsInline />
+                    <div className="w-full aspect-video rounded-md bg-black overflow-hidden relative">
+                        <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
+                        {hasCameraPermission === false && (
+                            <div className='absolute inset-0 flex items-center justify-center'>
+                                <Alert variant="destructive" className='w-auto'>
+                                    <AlertTitle>Camera Access Required</AlertTitle>
+                                    <AlertDescription>
+                                        Please allow camera access to use this feature.
+                                    </AlertDescription>
+                                </Alert>
+                            </div>
+                        )}
                     </div>
-                    {hasCameraPermission === false && (
-                        <Alert variant="destructive">
-                            <AlertTitle>Camera Access Required</AlertTitle>
-                            <AlertDescription>
-                                Please allow camera access to use this feature. You may need to change permissions in your browser settings.
-                            </AlertDescription>
-                        </Alert>
-                    )}
+                    
                     <Button onClick={handleCapture} disabled={!hasCameraPermission} className="w-full">
                         <Camera className="mr-2" />
                         Take Picture
