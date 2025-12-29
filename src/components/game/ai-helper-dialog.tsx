@@ -16,7 +16,6 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../ui/card
 import { useToast } from '@/hooks/use-toast';
 import { automatedScoreCalculation } from '@/ai/flows/automated-score-calculation';
 import { getBestQwirkleOptions } from '@/ai/flows/best-option-helper';
-import { fileToDataUri } from '@/lib/utils';
 import type { TurnScore } from '@/lib/types';
 import { Alert, AlertTitle, AlertDescription } from '../ui/alert';
 
@@ -236,7 +235,7 @@ export function AiHelperDialog({ isOpen, onOpenChange, onAddScore }: AiHelperDia
     setIsLoading(true);
     setBestMoveResult(null);
     try {
-        const { suggestions } = await getBestQwirkleOptions({ boardPhotoDataUri, playerTilesPhotoDataUri });
+        const { suggestions } = await getBestQwirkleOptions({ boardPhotoDataUri, playerTilesPhotoDataUri: tilesPhotoDataUri });
         setBestMoveResult(suggestions);
     } catch (error) {
         console.error(error);
