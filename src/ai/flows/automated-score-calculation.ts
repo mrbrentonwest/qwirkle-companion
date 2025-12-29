@@ -34,7 +34,6 @@ const prompt = ai.definePrompt({
   name: 'automatedScoreCalculationPrompt',
   input: {schema: AutomatedScoreCalculationInputSchema},
   output: {schema: AutomatedScoreCalculationOutputSchema},
-  model: 'gemini-pro',
   prompt: `You are an expert Qwirkle score calculator.
 
 You will use the image to calculate the score based on the rules of Qwirkle.
