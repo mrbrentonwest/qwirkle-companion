@@ -44,7 +44,7 @@ Board Image: {{media url=photoDataUri}}
 
 Respond with the score and details of how the score was calculated.
 `,
-  model: 'googleai/gemini-pro-vision',
+  model: 'googleai/gemini-1.5-pro-preview-0514',
 });
 
 const automatedScoreCalculationFlow = ai.defineFlow(
