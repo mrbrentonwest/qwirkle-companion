@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import {
   Dialog,
@@ -11,14 +11,14 @@ import {
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '../ui/button';
-import { Camera, Loader2, Sparkles } from 'lucide-react';
+import { Camera, Loader2, Sparkles, WandSparkles, RefreshCcw } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { automatedScoreCalculation } from '@/ai/flows/automated-score-calculation';
 import { getBestQwirkleOptions } from '@/ai/flows/best-option-helper';
 import { fileToDataUri } from '@/lib/utils';
 import type { TurnScore } from '@/lib/types';
-
+import { Alert, AlertTitle, AlertDescription } from '../ui/alert';
 
 interface AiHelperDialogProps {
   isOpen: boolean;
@@ -27,8 +27,44 @@ interface AiHelperDialogProps {
 }
 
 function FileUpload({ onFileSelect, label }: { onFileSelect: (file: File) => void, label: string }) {
+    const { toast } = useToast();
     const [preview, setPreview] = useState<string | null>(null);
+    const [view, setView] = useState<'upload' | 'camera'>('upload');
+    const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
     const inputRef = React.useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (view === 'camera' && hasCameraPermission === null) {
+            const getCameraPermission = async () => {
+              try {
+                const stream = await navigator.mediaDevices.getUserMedia({video: true});
+                setHasCameraPermission(true);
+        
+                if (videoRef.current) {
+                  videoRef.current.srcObject = stream;
+                }
+              } catch (error) {
+                console.error('Error accessing camera:', error);
+                setHasCameraPermission(false);
+                toast({
+                  variant: 'destructive',
+                  title: 'Camera Access Denied',
+                  description: 'Please enable camera permissions in your browser settings to use this app.',
+                });
+              }
+            };
+            getCameraPermission();
+        }
+
+        return () => {
+            if (videoRef.current && videoRef.current.srcObject) {
+                const stream = videoRef.current.srcObject as MediaStream;
+                stream.getTracks().forEach(track => track.stop());
+            }
+        }
+    }, [view, hasCameraPermission, toast]);
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -37,30 +73,76 @@ function FileUpload({ onFileSelect, label }: { onFileSelect: (file: File) => voi
             const reader = new FileReader();
             reader.onloadend = () => {
                 setPreview(reader.result as string);
+                setView('upload');
             };
             reader.readAsDataURL(file);
+        }
+    };
+
+    const handleCapture = () => {
+        if (videoRef.current && canvasRef.current) {
+            const video = videoRef.current;
+            const canvas = canvasRef.current;
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const context = canvas.getContext('2d');
+            if (context) {
+                context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+                canvas.toBlob((blob) => {
+                    if (blob) {
+                        const file = new File([blob], "capture.jpg", { type: "image/jpeg" });
+                        onFileSelect(file);
+                        setPreview(canvas.toDataURL('image/jpeg'));
+                        setView('upload');
+                    }
+                }, 'image/jpeg');
+            }
         }
     };
     
     return (
         <div className="w-full">
             <label className="text-sm font-medium text-foreground/80">{label}</label>
-            <div 
-              className="mt-1 flex justify-center items-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md cursor-pointer hover:border-primary"
-              onClick={() => inputRef.current?.click()}
-            >
-                <div className="space-y-1 text-center">
-                    {preview ? (
-                        <Image src={preview} alt="Preview" width={100} height={100} className="mx-auto h-24 w-24 object-cover rounded-md" />
-                    ) : (
-                        <Camera className="mx-auto h-12 w-12 text-foreground/50" />
-                    )}
-                    <p className="text-sm text-foreground/60">
-                        {preview ? 'Click to change image' : 'Click to upload an image'}
-                    </p>
-                    <input ref={inputRef} type="file" accept="image/*" className="sr-only" onChange={handleFileChange} />
+            {view === 'upload' && (
+                <div 
+                  className="mt-1 flex justify-center items-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md cursor-pointer hover:border-primary"
+                  onClick={() => inputRef.current?.click()}
+                >
+                    <div className="space-y-1 text-center">
+                        {preview ? (
+                            <Image src={preview} alt="Preview" width={100} height={100} className="mx-auto h-24 w-24 object-cover rounded-md" />
+                        ) : (
+                            <Camera className="mx-auto h-12 w-12 text-foreground/50" />
+                        )}
+                        <p className="text-sm text-foreground/60">
+                            {preview ? 'Click to change image' : 'Click to upload an image'}
+                        </p>
+                        <input ref={inputRef} type="file" accept="image/*" className="sr-only" onChange={handleFileChange} />
+                    </div>
                 </div>
-            </div>
+            )}
+            {view === 'camera' && (
+                <div className="mt-1 space-y-2">
+                    <video ref={videoRef} className="w-full aspect-video rounded-md bg-black" autoPlay muted playsInline />
+                    {hasCameraPermission === false && (
+                        <Alert variant="destructive">
+                            <AlertTitle>Camera Access Required</AlertTitle>
+                            <AlertDescription>
+                                Please allow camera access to use this feature. You may need to change permissions in your browser settings.
+                            </AlertDescription>
+                        </Alert>
+                    )}
+                    <Button onClick={handleCapture} disabled={!hasCameraPermission} className="w-full">
+                        <Camera className="mr-2" />
+                        Take Picture
+                    </Button>
+                </div>
+
+            )}
+            <canvas ref={canvasRef} className="hidden" />
+            <Button variant="link" onClick={() => setView(view === 'upload' ? 'camera' : 'upload')} className="w-full">
+                {view === 'upload' ? 'Use Camera Instead' : 'Upload File Instead'}
+            </Button>
         </div>
     );
 }
@@ -143,7 +225,7 @@ export function AiHelperDialog({ isOpen, onOpenChange, onAddScore }: AiHelperDia
             Use AI to automate scoring or get strategic advice.
           </DialogDescription>
         </DialogHeader>
-        <Tabs defaultValue="auto-score">
+        <Tabs defaultValue="auto-score" onValueChange={() => resetState()}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="auto-score">Auto Score</TabsTrigger>
             <TabsTrigger value="best-move">Best Move</TabsTrigger>
