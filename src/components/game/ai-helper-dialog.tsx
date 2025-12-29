@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '../ui/button';
-import { Camera, Loader2, Sparkles, WandSparkles, RefreshCcw } from 'lucide-react';
+import { Camera, Loader2, Sparkles, WandSparkles } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { automatedScoreCalculation } from '@/ai/flows/automated-score-calculation';
@@ -26,45 +26,6 @@ interface AiHelperDialogProps {
   onAddScore: (score: number, type: TurnScore['type']) => void;
 }
 
-const resizeImage = (file: File): Promise<File> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = (event) => {
-            const img = document.createElement('img');
-            img.src = event.target?.result as string;
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 1024;
-                const scaleSize = MAX_WIDTH / img.width;
-                canvas.width = MAX_WIDTH;
-                canvas.height = img.height * scaleSize;
-
-                const ctx = canvas.getContext('2d');
-                if (!ctx) {
-                    return reject(new Error('Could not get canvas context'));
-                }
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-                canvas.toBlob((blob) => {
-                    if (blob) {
-                        const newFile = new File([blob], file.name, {
-                            type: 'image/jpeg',
-                            lastModified: Date.now(),
-                        });
-                        resolve(newFile);
-                    } else {
-                        reject(new Error('Canvas to Blob conversion failed'));
-                    }
-                }, 'image/jpeg', 0.8); // Adjust quality to control size
-            };
-            img.onerror = reject;
-        };
-        reader.onerror = reject;
-    });
-};
-
-
 function FileUpload({ onFileSelect, label }: { onFileSelect: (file: File) => void, label: string }) {
     const { toast } = useToast();
     const [preview, setPreview] = useState<string | null>(null);
@@ -74,7 +35,6 @@ function FileUpload({ onFileSelect, label }: { onFileSelect: (file: File) => voi
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const inputRef = React.useRef<HTMLInputElement>(null);
     const streamRef = useRef<MediaStream | null>(null);
-
 
     const getCameraPermission = async () => {
         if (streamRef.current) {
@@ -120,23 +80,19 @@ function FileUpload({ onFileSelect, label }: { onFileSelect: (file: File) => voi
         return () => {
             stopCamera();
         }
-    }, [view]);
+    }, [view, toast]);
 
     const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
             try {
-                const resizedFile = await resizeImage(file);
-                onFileSelect(resizedFile);
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    setPreview(reader.result as string);
-                    setView('upload');
-                };
-                reader.readAsDataURL(resizedFile);
+                onFileSelect(file);
+                const dataUri = await fileToDataUri(file);
+                setPreview(dataUri);
+                setView('upload');
             } catch (error) {
-                console.error("Image resizing failed:", error);
-                toast({ title: "Image processing failed.", description: "Could not resize the image. Please try another one.", variant: "destructive" });
+                console.error("Image processing failed:", error);
+                toast({ title: "Image processing failed.", description: "Could not read the image file. Please try another one.", variant: "destructive" });
             }
         }
     };
@@ -145,10 +101,8 @@ function FileUpload({ onFileSelect, label }: { onFileSelect: (file: File) => voi
         if (videoRef.current && canvasRef.current) {
             const video = videoRef.current;
             const canvas = canvasRef.current;
-            const MAX_WIDTH = 1024;
-            const scaleSize = MAX_WIDTH / video.videoWidth;
-            canvas.width = MAX_WIDTH;
-            canvas.height = video.videoHeight * scaleSize;
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
 
             const context = canvas.getContext('2d');
             if (context) {
@@ -160,7 +114,7 @@ function FileUpload({ onFileSelect, label }: { onFileSelect: (file: File) => voi
                         setPreview(canvas.toDataURL('image/jpeg'));
                         setView('upload');
                     }
-                }, 'image/jpeg', 0.8);
+                }, 'image/jpeg', 0.9);
             }
         }
     };
