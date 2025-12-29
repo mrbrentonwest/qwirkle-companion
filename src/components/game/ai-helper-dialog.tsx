@@ -34,12 +34,14 @@ function FileUpload({ onFileSelect, label }: { onFileSelect: (file: File) => voi
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const inputRef = React.useRef<HTMLInputElement>(null);
+    const streamRef = useRef<MediaStream | null>(null);
+
 
     useEffect(() => {
-        let stream: MediaStream | null = null;
         const getCameraPermission = async () => {
           try {
-            stream = await navigator.mediaDevices.getUserMedia({video: true});
+            const stream = await navigator.mediaDevices.getUserMedia({video: true});
+            streamRef.current = stream;
             setHasCameraPermission(true);
     
             if (videoRef.current) {
@@ -56,13 +58,14 @@ function FileUpload({ onFileSelect, label }: { onFileSelect: (file: File) => voi
           }
         };
 
-        if (view === 'camera') {
+        if (view === 'camera' && !streamRef.current) {
             getCameraPermission();
         }
 
         return () => {
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
+            if (streamRef.current && view === 'upload') {
+                streamRef.current.getTracks().forEach(track => track.stop());
+                streamRef.current = null;
             }
         }
     }, [view, toast]);
@@ -199,8 +202,7 @@ export function AiHelperDialog({ isOpen, onOpenChange, onAddScore }: AiHelperDia
   const applyScore = (score: number, type: TurnScore['type']) => {
     onAddScore(score, type);
     toast({ title: "Score Added!", description: `${score} points have been added to your total.`});
-    onOpenChange(false);
-    resetState();
+    handleOpenChange(false);
   };
 
   const resetState = () => {
