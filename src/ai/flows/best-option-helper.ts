@@ -53,7 +53,7 @@ Analyze the board and tiles, and provide 3 move suggestions, detailing the move 
 Ensure that the move descriptions are easy to understand and provide strategic insights.
 
 Output the suggestions in JSON format.`,
-  model: 'googleai/gemini-1.0-pro-vision-latest',
+  model: 'googleai/gemini-pro-vision',
 });
 
 const bestQwirkleOptionsFlow = ai.defineFlow(
@@ -67,5 +67,3 @@ const bestQwirkleOptionsFlow = ai.defineFlow(
     return output!;
   }
 );
-
-    
