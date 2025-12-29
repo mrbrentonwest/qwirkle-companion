@@ -26,6 +26,45 @@ interface AiHelperDialogProps {
   onAddScore: (score: number, type: TurnScore['type']) => void;
 }
 
+const resizeImage = (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = document.createElement('img');
+            img.src = event.target?.result as string;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 1024;
+                const scaleSize = MAX_WIDTH / img.width;
+                canvas.width = MAX_WIDTH;
+                canvas.height = img.height * scaleSize;
+
+                const ctx = canvas.getContext('2d');
+                if (!ctx) {
+                    return reject(new Error('Could not get canvas context'));
+                }
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                canvas.toBlob((blob) => {
+                    if (blob) {
+                        const newFile = new File([blob], file.name, {
+                            type: 'image/jpeg',
+                            lastModified: Date.now(),
+                        });
+                        resolve(newFile);
+                    } else {
+                        reject(new Error('Canvas to Blob conversion failed'));
+                    }
+                }, 'image/jpeg', 0.8); // Adjust quality to control size
+            };
+            img.onerror = reject;
+        };
+        reader.onerror = reject;
+    });
+};
+
+
 function FileUpload({ onFileSelect, label }: { onFileSelect: (file: File) => void, label: string }) {
     const { toast } = useToast();
     const [preview, setPreview] = useState<string | null>(null);
@@ -83,16 +122,22 @@ function FileUpload({ onFileSelect, label }: { onFileSelect: (file: File) => voi
         }
     }, [view]);
 
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
-            onFileSelect(file);
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setPreview(reader.result as string);
-                setView('upload');
-            };
-            reader.readAsDataURL(file);
+            try {
+                const resizedFile = await resizeImage(file);
+                onFileSelect(resizedFile);
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    setPreview(reader.result as string);
+                    setView('upload');
+                };
+                reader.readAsDataURL(resizedFile);
+            } catch (error) {
+                console.error("Image resizing failed:", error);
+                toast({ title: "Image processing failed.", description: "Could not resize the image. Please try another one.", variant: "destructive" });
+            }
         }
     };
 
@@ -100,11 +145,14 @@ function FileUpload({ onFileSelect, label }: { onFileSelect: (file: File) => voi
         if (videoRef.current && canvasRef.current) {
             const video = videoRef.current;
             const canvas = canvasRef.current;
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
+            const MAX_WIDTH = 1024;
+            const scaleSize = MAX_WIDTH / video.videoWidth;
+            canvas.width = MAX_WIDTH;
+            canvas.height = video.videoHeight * scaleSize;
+
             const context = canvas.getContext('2d');
             if (context) {
-                context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
                 canvas.toBlob((blob) => {
                     if (blob) {
                         const file = new File([blob], "capture.jpg", { type: "image/jpeg" });
@@ -112,7 +160,7 @@ function FileUpload({ onFileSelect, label }: { onFileSelect: (file: File) => voi
                         setPreview(canvas.toDataURL('image/jpeg'));
                         setView('upload');
                     }
-                }, 'image/jpeg');
+                }, 'image/jpeg', 0.8);
             }
         }
     };
@@ -308,3 +356,5 @@ export function AiHelperDialog({ isOpen, onOpenChange, onAddScore }: AiHelperDia
     </Dialog>
   );
 }
+
+    
