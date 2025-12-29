@@ -43,7 +43,7 @@ const bestQwirkleOptionsPrompt = ai.definePrompt({
   name: 'bestQwirkleOptionsPrompt',
   input: {schema: BestQwirkleOptionsInputSchema},
   output: {schema: BestQwirkleOptionsOutputSchema},
-  model: 'gemini-1.5-flash',
+  model: 'googleai/gemini-1.5-flash',
   prompt: `You are an expert Qwirkle player and strategist. Given the current state of the board and the player's tiles, you will analyze the possibilities and suggest the top 3 moves that would yield the highest scores.
 
 Board Image: {{media url=boardPhotoDataUri}}
