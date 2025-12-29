@@ -20,13 +20,45 @@ import { fileToDataUri } from '@/lib/utils';
 import type { TurnScore } from '@/lib/types';
 import { Alert, AlertTitle, AlertDescription } from '../ui/alert';
 
+const MAX_IMAGE_WIDTH = 1024;
+
+const resizeImageAndGetDataUri = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (readerEvent) => {
+      const img = document.createElement('img');
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const aspect = img.height / img.width;
+        canvas.width = Math.min(img.width, MAX_IMAGE_WIDTH);
+        canvas.height = canvas.width * aspect;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          return reject(new Error('Could not get canvas context'));
+        }
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        // For JPEG, you can specify quality. 0.9 is a good balance.
+        const dataUrl = canvas.toDataURL(file.type, 0.9);
+        resolve(dataUrl);
+      };
+      img.onerror = reject;
+      img.src = readerEvent.target?.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
+
+
 interface AiHelperDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onAddScore: (score: number, type: TurnScore['type']) => void;
 }
 
-function FileUpload({ onFileSelect, label }: { onFileSelect: (file: File) => void, label: string }) {
+function FileUpload({ onFileSelect, label }: { onFileSelect: (dataUri: string) => void, label: string }) {
     const { toast } = useToast();
     const [preview, setPreview] = useState<string | null>(null);
     const [view, setView] = useState<'upload' | 'camera'>('upload');
@@ -86,8 +118,8 @@ function FileUpload({ onFileSelect, label }: { onFileSelect: (file: File) => voi
         const file = event.target.files?.[0];
         if (file) {
             try {
-                onFileSelect(file);
-                const dataUri = await fileToDataUri(file);
+                const dataUri = await resizeImageAndGetDataUri(file);
+                onFileSelect(dataUri);
                 setPreview(dataUri);
                 setView('upload');
             } catch (error) {
@@ -101,20 +133,18 @@ function FileUpload({ onFileSelect, label }: { onFileSelect: (file: File) => voi
         if (videoRef.current && canvasRef.current) {
             const video = videoRef.current;
             const canvas = canvasRef.current;
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
+            
+            const aspect = video.videoHeight / video.videoWidth;
+            canvas.width = Math.min(video.videoWidth, MAX_IMAGE_WIDTH);
+            canvas.height = canvas.width * aspect;
 
             const context = canvas.getContext('2d');
             if (context) {
                 context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                canvas.toBlob((blob) => {
-                    if (blob) {
-                        const file = new File([blob], "capture.jpg", { type: "image/jpeg" });
-                        onFileSelect(file);
-                        setPreview(canvas.toDataURL('image/jpeg'));
-                        setView('upload');
-                    }
-                }, 'image/jpeg', 0.9);
+                const dataUri = canvas.toDataURL('image/jpeg', 0.9);
+                onFileSelect(dataUri);
+                setPreview(dataUri);
+                setView('upload');
             }
         }
     };
@@ -174,22 +204,21 @@ function FileUpload({ onFileSelect, label }: { onFileSelect: (file: File) => voi
 
 export function AiHelperDialog({ isOpen, onOpenChange, onAddScore }: AiHelperDialogProps) {
   const { toast } = useToast();
-  const [boardPhoto, setBoardPhoto] = useState<File | null>(null);
-  const [tilesPhoto, setTilesPhoto] = useState<File | null>(null);
+  const [boardPhotoDataUri, setBoardPhotoDataUri] = useState<string | null>(null);
+  const [tilesPhotoDataUri, setTilesPhotoDataUri] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [autoScoreResult, setAutoScoreResult] = useState<{ score: number, details: string } | null>(null);
   const [bestMoveResult, setBestMoveResult] = useState<{moveDescription: string, score: number}[] | null>(null);
 
   const handleAutoScore = async () => {
-    if (!boardPhoto) {
+    if (!boardPhotoDataUri) {
         toast({ title: "Please upload a photo of the board.", variant: "destructive" });
         return;
     }
     setIsLoading(true);
     setAutoScoreResult(null);
     try {
-        const photoDataUri = await fileToDataUri(boardPhoto);
-        const result = await automatedScoreCalculation({ photoDataUri });
+        const result = await automatedScoreCalculation({ photoDataUri: boardPhotoDataUri });
         setAutoScoreResult(result);
     } catch (error) {
         console.error(error);
@@ -200,15 +229,13 @@ export function AiHelperDialog({ isOpen, onOpenChange, onAddScore }: AiHelperDia
   };
 
   const handleBestMove = async () => {
-    if (!boardPhoto || !tilesPhoto) {
+    if (!boardPhotoDataUri || !tilesPhotoDataUri) {
         toast({ title: "Please upload photos for both board and tiles.", variant: "destructive" });
         return;
     }
     setIsLoading(true);
     setBestMoveResult(null);
     try {
-        const boardPhotoDataUri = await fileToDataUri(boardPhoto);
-        const playerTilesPhotoDataUri = await fileToDataUri(tilesPhoto);
         const { suggestions } = await getBestQwirkleOptions({ boardPhotoDataUri, playerTilesPhotoDataUri });
         setBestMoveResult(suggestions);
     } catch (error) {
@@ -226,8 +253,8 @@ export function AiHelperDialog({ isOpen, onOpenChange, onAddScore }: AiHelperDia
   };
 
   const resetState = () => {
-    setBoardPhoto(null);
-    setTilesPhoto(null);
+    setBoardPhotoDataUri(null);
+    setTilesPhotoDataUri(null);
     setAutoScoreResult(null);
     setBestMoveResult(null);
   }
@@ -256,8 +283,8 @@ export function AiHelperDialog({ isOpen, onOpenChange, onAddScore }: AiHelperDia
           <TabsContent value="auto-score" className="pt-4">
             <div className="space-y-4">
                 <p className="text-sm text-muted-foreground">Take a picture of the board after your turn to automatically calculate your score.</p>
-                <FileUpload onFileSelect={setBoardPhoto} label="Board Photo" />
-                <Button onClick={handleAutoScore} disabled={isLoading || !boardPhoto} className="w-full">
+                <FileUpload onFileSelect={setBoardPhotoDataUri} label="Board Photo" />
+                <Button onClick={handleAutoScore} disabled={isLoading || !boardPhotoDataUri} className="w-full">
                     {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                     Calculate Score
                 </Button>
@@ -279,9 +306,9 @@ export function AiHelperDialog({ isOpen, onOpenChange, onAddScore }: AiHelperDia
           <TabsContent value="best-move" className="pt-4">
              <div className="space-y-4">
                 <p className="text-sm text-muted-foreground">Take a picture of the board and your tiles to get the top 3 move suggestions.</p>
-                <FileUpload onFileSelect={setBoardPhoto} label="Board Photo" />
-                <FileUpload onFileSelect={setTilesPhoto} label="Your Tiles" />
-                <Button onClick={handleBestMove} disabled={isLoading || !boardPhoto || !tilesPhoto} className="w-full">
+                <FileUpload onFileSelect={setBoardPhotoDataUri} label="Board Photo" />
+                <FileUpload onFileSelect={setTilesPhotoDataUri} label="Your Tiles" />
+                <Button onClick={handleBestMove} disabled={isLoading || !boardPhotoDataUri || !tilesPhotoDataUri} className="w-full">
                     {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                     Find Best Moves
                 </Button>
@@ -310,5 +337,3 @@ export function AiHelperDialog({ isOpen, onOpenChange, onAddScore }: AiHelperDia
     </Dialog>
   );
 }
-
-    
