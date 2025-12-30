@@ -5,15 +5,19 @@ import type { Player, TurnScore } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { CheckCircle, Replace } from 'lucide-react';
+import { CheckCircle, Replace, Undo2, Redo2 } from 'lucide-react';
 
 interface CurrentTurnProps {
   player: Player;
   round: number;
   onAddScore: (score: number, type: TurnScore['type']) => void;
+  onUndo: () => void;
+  onRedo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
 }
 
-export function CurrentTurn({ player, round, onAddScore }: CurrentTurnProps) {
+export function CurrentTurn({ player, round, onAddScore, onUndo, onRedo, canUndo, canRedo }: CurrentTurnProps) {
   const [score, setScore] = useState('');
 
   const handleAddScore = () => {
@@ -38,9 +42,6 @@ export function CurrentTurn({ player, round, onAddScore }: CurrentTurnProps) {
   return (
     <div className="flex-1 flex flex-col justify-center space-y-6">
       <div className="text-center space-y-3">
-        <div className="inline-block bg-white px-4 py-1.5 rounded-full shadow-sm border border-orange-100">
-          <span className="text-xs font-bold text-orange-600 uppercase tracking-widest">Round {round}</span>
-        </div>
         <h2 className="text-3xl font-headline font-black text-gray-800">
           It's <span className="text-primary underline decoration-4 decoration-wavy underline-offset-4">{player.name}'s</span> Turn!
         </h2>
@@ -66,14 +67,36 @@ export function CurrentTurn({ player, round, onAddScore }: CurrentTurnProps) {
           </Button>
         </div>
         
-        <Button 
-          variant="outline" 
-          className="w-full h-14 rounded-2xl border-2 border-dashed border-gray-300 text-gray-400 font-bold hover:bg-gray-50 hover:text-gray-600 transition-all flex items-center justify-center gap-2" 
+        <Button
+          variant="outline"
+          className="w-full h-14 rounded-2xl border-2 border-dashed border-gray-300 text-gray-400 font-bold hover:bg-gray-50 hover:text-gray-600 transition-all flex items-center justify-center gap-2"
           onClick={handleSwapTiles}
         >
           <Replace className="h-5 w-5" />
           SWAP TILES (0 PTS)
         </Button>
+
+        {/* Undo/Redo Buttons */}
+        <div className="flex gap-3">
+          <Button
+            variant="outline"
+            className="flex-1 h-12 rounded-2xl border-2 border-gray-200 text-gray-500 font-bold hover:bg-gray-50 hover:text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+            onClick={onUndo}
+            disabled={!canUndo}
+          >
+            <Undo2 className="h-5 w-5" />
+            Undo
+          </Button>
+          <Button
+            variant="outline"
+            className="flex-1 h-12 rounded-2xl border-2 border-gray-200 text-gray-500 font-bold hover:bg-gray-50 hover:text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+            onClick={onRedo}
+            disabled={!canRedo}
+          >
+            <Redo2 className="h-5 w-5" />
+            Redo
+          </Button>
+        </div>
       </div>
     </div>
   );

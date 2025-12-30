@@ -42,7 +42,7 @@ A board game companion app for Qwirkle that helps players track scores, auto-cal
 
 ### User Experience
 
-- [ ] Add undo/redo functionality for score entries
+- [x] Add undo/redo functionality for score entries
 - [ ] Improve error messages when AI detection fails
 - [ ] Add loading states and progress indicators during AI processing
 - [ ] Support landscape orientation for tablet users
@@ -98,6 +98,15 @@ A board game companion app for Qwirkle that helps players track scores, auto-cal
   - One-time purchase vs subscription
   - Ad-supported free tier
   - API costs (Gemini usage) and sustainable pricing
+- [ ] **Proposed tier structure**:
+  - **Free tier**: Full manual scoring functionality (no AI features)
+  - **AI Credits pack**: ~$1.99 for X number of AI Best Move suggestions (one-time purchase)
+  - **Unlimited AI subscription**: ~$9.99/month for unlimited AI features (Auto-Score + Best Move)
+- [ ] **Payment implementation**:
+  - Payment provider integration (Stripe, RevenueCat, or app store in-app purchases)
+  - User accounts / authentication for tracking usage
+  - Credit tracking system for pay-per-use tier
+  - Subscription management and renewal handling
 
 ---
 
