@@ -1,13 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import type { GameState, TurnScore } from '@/lib/types';
 import { GameSetup } from '@/components/game/game-setup';
 import { GameView } from '@/components/game/game-view';
 import { AppLogo } from '@/components/icons';
+import { CelebrationOverlay } from '@/components/game/celebration-overlay';
 
 export default function Home() {
   const [gameState, setGameState] = useState<GameState | null>(null);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationScore, setCelebrationScore] = useState(0);
+
+  const triggerCelebration = useCallback((score: number) => {
+    setCelebrationScore(score);
+    setShowCelebration(true);
+  }, []);
+
+  const dismissCelebration = useCallback(() => {
+    setShowCelebration(false);
+  }, []);
 
   const handleStartGame = (playerNames: string[]) => {
     setGameState({
@@ -25,9 +37,14 @@ export default function Home() {
   };
 
   const handleAddScore = (score: number, type: TurnScore['type']) => {
+    // Trigger celebration for Qwirkle (12+ points)
+    if (score >= 12) {
+      triggerCelebration(score);
+    }
+
     setGameState((prev) => {
       if (!prev) return null;
-  
+
       const newPlayers = prev.players.map((player, index) => {
         if (index === prev.currentPlayerIndex) {
           const newScore: TurnScore = {
@@ -46,10 +63,10 @@ export default function Home() {
         }
         return player;
       });
-  
+
       const nextPlayerIndex = (prev.currentPlayerIndex + 1) % newPlayers.length;
       const nextRound = nextPlayerIndex === 0 ? prev.round + 1 : prev.round;
-  
+
       return {
         ...prev,
         players: newPlayers,
@@ -105,12 +122,12 @@ export default function Home() {
                 </h1>
             </div>
         </header>
-      
+
         <main className="flex-1 overflow-y-auto">
             {!gameState ? (
                 <GameSetup onStartGame={handleStartGame} />
             ) : (
-                <GameView 
+                <GameView
                     gameState={gameState}
                     onAddScore={handleAddScore}
                     onEndGame={handleEndGame}
@@ -118,6 +135,13 @@ export default function Home() {
                 />
             )}
         </main>
+
+        {/* Qwirkle Celebration Overlay */}
+        <CelebrationOverlay
+          isVisible={showCelebration}
+          score={celebrationScore}
+          onComplete={dismissCelebration}
+        />
       </div>
     </div>
   );

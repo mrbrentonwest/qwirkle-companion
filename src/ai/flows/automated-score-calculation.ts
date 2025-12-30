@@ -36,15 +36,33 @@ const prompt = ai.definePrompt({
   output: {schema: AutomatedScoreCalculationOutputSchema},
   prompt: `You are an expert Qwirkle score calculator.
 
-You will use the image to calculate the score based on the rules of Qwirkle.
+## QWIRKLE SCORING RULES
 
-Use the following image of the Qwirkle board to calculate the score.
+**Tiles:** 6 shapes (circle, star, diamond, square, clover, starburst) × 6 colors (red, orange, yellow, green, blue, purple).
+
+**Line Rules:**
+- Lines must contain tiles that are either ALL the same color OR ALL the same shape
+- No duplicate tiles allowed in a line
+- A line can NEVER be longer than 6 tiles
+
+**Scoring Rules:**
+- Score 1 point for EACH tile in every line you create or add to
+- A single tile can score points for TWO lines if it's part of both a horizontal and vertical line
+- **QWIRKLE BONUS:** Completing a line of all 6 different colors OR all 6 different shapes scores 6 points for the tiles PLUS 6 bonus points = 12 points total
+
+## YOUR TASK
+
+Look at the board image and identify the tiles that were MOST RECENTLY PLAYED (the current turn's move). Calculate the score for ONLY those newly placed tiles based on the lines they create or extend.
 
 Board Image: {{media url=photoDataUri}}
 
-Respond with the score and details of how the score was calculated.
+IMPORTANT: You are calculating the score for a SINGLE TURN, not the entire board. Identify which tiles appear to be the newest placement and score only those tiles' contribution to lines.
+
+Respond with:
+- The calculated score for this turn
+- Details explaining which tiles were scored and how (e.g., "Blue star added to a line of 4 blues = 4 points, also created vertical line of 3 stars = 3 points, total = 7 points")
 `,
-  model: 'googleai/gemini-1.5-pro-preview-0514',
+  model: 'googleai/gemini-2.0-flash',
 });
 
 const automatedScoreCalculationFlow = ai.defineFlow(
@@ -55,6 +73,11 @@ const automatedScoreCalculationFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await prompt(input);
-    return output!;
+
+    // Sanitize score to prevent floating point bugs and unrealistic values
+    return {
+      ...output!,
+      score: Math.min(Math.max(Math.round(output!.score), 0), 100),
+    };
   }
 );

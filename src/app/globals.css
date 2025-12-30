@@ -4,48 +4,33 @@
 
 @layer base {
   :root {
-    --background: 0 0% 94.1%;
-    --foreground: 262 52% 15%;
+    --background: 48 100% 98%;
+    --foreground: 215 19% 17%;
     --card: 0 0% 100%;
-    --card-foreground: 262 52% 15%;
+    --card-foreground: 215 19% 17%;
     --popover: 0 0% 100%;
-    --popover-foreground: 262 52% 15%;
-    --primary: 262 52% 50%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 263 44% 87%;
-    --secondary-foreground: 262 52% 25%;
-    --muted: 263 44% 92%;
-    --muted-foreground: 262 52% 40%;
-    --accent: 263 44% 77%;
-    --accent-foreground: 262 52% 15%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 263 44% 85%;
-    --input: 263 44% 90%;
-    --ring: 262 52% 50%;
-    --radius: 0.5rem;
+    --popover-foreground: 215 19% 17%;
+    --primary: 25 95% 53%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 25 100% 94%;
+    --secondary-foreground: 25 95% 30%;
+    --muted: 210 20% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 25 100% 92%;
+    --accent-foreground: 25 95% 30%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 25 100% 94%;
+    --input: 214 32% 91%;
+    --ring: 25 95% 53%;
+    --radius: 1.25rem;
   }
 
   .dark {
-    --background: 262 15% 10%;
-    --foreground: 0 0% 98%;
-    --card: 262 15% 12%;
-    --card-foreground: 0 0% 98%;
-    --popover: 262 15% 10%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 262 52% 60%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 263 20% 25%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 263 20% 20%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 263 44% 47%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 263 20% 25%;
-    --input: 263 20% 22%;
-    --ring: 262 52% 60%;
+    --background: 215 19% 10%;
+    --foreground: 0 0% 100%;
+    /* Keep dark mode similar but adjust for contrast if needed, 
+       though the user wants the "bright/inviting" look primarily. */
   }
 }
 
@@ -54,6 +39,12 @@
     @apply border-border;
   }
   body {
-    @apply bg-muted text-foreground;
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .btn-chunky {
+    @apply transition-all active:translate-y-1 active:border-b-0 border-b-4 shadow-md font-black;
   }
 }

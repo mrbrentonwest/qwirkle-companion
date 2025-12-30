@@ -30,30 +30,53 @@ export function GameView({ gameState, onAddScore, onEndGame, onResetGame }: Game
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <PlayerScores players={players} currentPlayerId={currentPlayer.id} />
+    <div className="flex flex-col h-full relative bg-white overflow-hidden">
+      {/* Playful Background Pattern */}
+      <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none" 
+           style={{ 
+               backgroundImage: `radial-gradient(#000 1px, transparent 1px)`, 
+               backgroundSize: '24px 24px' 
+           }} 
+      />
 
-      <div className="flex-grow p-4 space-y-4 flex flex-col justify-between">
-        <CurrentTurn 
-          player={currentPlayer} 
-          round={round}
-          onAddScore={onAddScore} 
-        />
-        
-        <div className="space-y-2 pt-4 border-t">
-            <Button variant="secondary" className="w-full" onClick={() => setAiHelperOpen(true)}>
-                <WandSparkles className="mr-2 h-4 w-4" />
-                AI Helpers
-            </Button>
-             <div className="grid grid-cols-2 gap-2">
-                <Button variant="outline" onClick={() => setHistoryOpen(true)}>
-                    <History className="mr-2 h-4 w-4" />
-                    Score History
+      <div className="relative z-10 flex flex-col h-full">
+        <PlayerScores players={players} currentPlayerId={currentPlayer.id} />
+
+        <div className="flex-grow p-4 space-y-4 flex flex-col justify-between">
+            <CurrentTurn 
+            player={currentPlayer} 
+            round={round}
+            onAddScore={onAddScore} 
+            />
+            
+            <div className="space-y-3 pt-6">
+                <Button 
+                    variant="default" 
+                    className="w-full h-14 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white border-b-4 border-purple-800 active:border-b-0 active:translate-y-1 shadow-md flex items-center justify-center gap-2 font-bold" 
+                    onClick={() => setAiHelperOpen(true)}
+                >
+                    <WandSparkles className="h-5 w-5 text-yellow-300" />
+                    ASK AI HELPER
                 </Button>
-                <Button variant="destructive" onClick={() => setEndGameOpen(true)}>
-                    End Game
-                </Button>
-             </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                    <Button 
+                        variant="secondary" 
+                        className="h-12 rounded-xl bg-gray-100 text-gray-600 font-bold border-b-2 border-gray-300 active:border-b-0 active:translate-y-0.5" 
+                        onClick={() => setHistoryOpen(true)}
+                    >
+                        <History className="mr-2 h-4 w-4" />
+                        History
+                    </Button>
+                    <Button 
+                        variant="destructive" 
+                        className="h-12 rounded-xl border-b-2 border-red-800 active:border-b-0 active:translate-y-0.5 font-bold" 
+                        onClick={() => setEndGameOpen(true)}
+                    >
+                        End Game
+                    </Button>
+                </div>
+            </div>
         </div>
       </div>
 
