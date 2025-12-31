@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 48 100% 98%;
+    --background: 210 20% 96%; /* #F3F4F6 - Cool Gray */
     --foreground: 215 19% 17%;
     --card: 0 0% 100%;
     --card-foreground: 215 19% 17%;
@@ -20,7 +20,7 @@
     --accent-foreground: 25 95% 30%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 25 100% 94%;
+    --border: 214 32% 91%;
     --input: 214 32% 91%;
     --ring: 25 95% 53%;
     --radius: 1.25rem;
@@ -29,8 +29,6 @@
   .dark {
     --background: 215 19% 10%;
     --foreground: 0 0% 100%;
-    /* Keep dark mode similar but adjust for contrast if needed, 
-       though the user wants the "bright/inviting" look primarily. */
   }
 }
 

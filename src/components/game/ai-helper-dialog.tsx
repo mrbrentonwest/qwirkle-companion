@@ -11,13 +11,16 @@ import {
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '../ui/button';
-import { Camera, Loader2, Sparkles, WandSparkles, SwitchCamera, Circle } from 'lucide-react';
+import { Camera, Loader2, Sparkles, WandSparkles, SwitchCamera, X, ChevronRight } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { automatedScoreCalculation } from '@/ai/flows/automated-score-calculation';
 import { getBestQwirkleOptions, type BestQwirkleOptionsOutput, type Tile, type BoardLine } from '@/ai/flows/best-option-helper';
 import type { TurnScore } from '@/lib/types';
 import { Alert, AlertTitle, AlertDescription } from '../ui/alert';
+import { Progress } from '../ui/progress';
+import { QwirkleShape } from '@/components/icons';
+import { cn } from '@/lib/utils';
 
 const MAX_IMAGE_WIDTH = 800;
 const JPEG_QUALITY = 0.7;
@@ -50,34 +53,12 @@ const resizeImageAndGetDataUri = (file: File): Promise<string> => {
   });
 };
 
-const QwirkleShape = ({ shape, color, className }: { shape: string, color: string, className?: string }) => {
-  const colorMap: Record<string, string> = {
-    red: 'text-red-500 fill-current',
-    orange: 'text-orange-500 fill-current',
-    yellow: 'text-yellow-500 fill-current',
-    green: 'text-green-500 fill-current',
-    blue: 'text-blue-500 fill-current',
-    purple: 'text-purple-500 fill-current',
-  };
-
-  const c = colorMap[color] || 'text-gray-500';
-
-  switch (shape) {
-    case 'circle': return <svg viewBox="0 0 24 24" className={`${c} ${className}`}><circle cx="12" cy="12" r="10" /></svg>;
-    case 'square': return <svg viewBox="0 0 24 24" className={`${c} ${className}`}><rect x="4" y="4" width="16" height="16" rx="2" /></svg>;
-    case 'diamond': return <svg viewBox="0 0 24 24" className={`${c} ${className}`}><polygon points="12 2 22 12 12 22 2 12" /></svg>;
-    case 'star': return <svg viewBox="0 0 24 24" className={`${c} ${className}`}><polygon points="12 2 15 9 22 9 17 14 19 21 12 17 5 21 7 14 2 9 9 9" /></svg>;
-    case 'clover': return (
-      <svg viewBox="0 0 24 24" className={`${c} ${className}`} fill="currentColor">
-        <path d="M12 12c0-3.5 2-6 4.5-6s4.5 2.5 4.5 6-2 6-4.5 6-4.5-2.5-4.5-6z" />
-        <path d="M12 12c0 3.5-2 6-4.5 6S3 15.5 3 12s2-6 4.5-6 4.5 2.5 4.5 6z" />
-        <path d="M12 12c3.5 0 6-2 6-4.5S15.5 3 12 3s-6 2-6 4.5 2.5 6 6 6z" />
-        <path d="M12 12c-3.5 0-6 2-6 4.5S8.5 21 12 21s6-2 6-4.5-2.5-6-6-6z" />
-      </svg>
-    );
-    case 'starburst': return <svg viewBox="0 0 24 24" className={`${c} ${className}`}><polygon points="12 2 14.5 9.5 22 12 14.5 14.5 12 22 9.5 14.5 2 12 9.5 9.5" /></svg>;
-    default: return <Circle className={`${c} ${className}`} />;
-  }
+// --- DEPTH UTILITIES ---
+const depthStyles = {
+    raised: "bg-white shadow-[inset_0_1px_0_0_rgba(255,255,255,1.0),0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-1px_rgba(0,0,0,0.06)] border border-gray-200",
+    recessed: "bg-gray-100 shadow-[inset_0_2px_4px_0_rgba(0,0,0,0.06)] border-b border-white",
+    buttonPrimary: "bg-orange-600 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.4),0_4px_6px_rgba(194,65,12,0.4),0_2px_4px_rgba(0,0,0,0.1)] text-white border border-orange-700/20 active:translate-y-1 active:shadow-inner",
+    buttonPurple: "bg-purple-600 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.3),0_4px_6px_rgba(126,34,206,0.4),0_2px_4px_rgba(0,0,0,0.1)] text-white border border-purple-700/20 active:translate-y-1 active:shadow-inner",
 };
 
 const COLORS = ['red', 'orange', 'yellow', 'green', 'blue', 'purple'] as const;
@@ -106,34 +87,40 @@ function EditableTileChip({
 
   if (isEditing) {
     return (
-      <div className="bg-white rounded-xl border-2 border-purple-300 p-2 shadow-lg space-y-2">
-        <div className="flex gap-1 flex-wrap">
+      <div className={cn("rounded-2xl p-3 space-y-3 z-50", depthStyles.raised)}>
+        <div className="flex gap-1.5 flex-wrap">
           {COLORS.map(c => (
             <button
               key={c}
               onClick={() => setEditColor(c)}
-              className={`w-6 h-6 rounded-full border-2 ${editColor === c ? 'border-gray-800 scale-110' : 'border-transparent'}`}
-              style={{ backgroundColor: c === 'purple' ? '#a855f7' : c }}
+              className={cn(
+                "w-7 h-7 rounded-full border-2 transition-all",
+                editColor === c ? 'border-gray-900 scale-110 shadow-md' : 'border-transparent opacity-70'
+              )}
+              style={{ backgroundColor: c === 'purple' ? '#9333ea' : c === 'orange' ? '#ea580c' : c === 'yellow' ? '#ca8a04' : c === 'green' ? '#16a34a' : c === 'blue' ? '#2563eb' : '#dc2626' }}
             />
           ))}
         </div>
-        <div className="flex gap-1 flex-wrap">
+        <div className="flex gap-1.5 flex-wrap">
           {SHAPES.map(s => (
             <button
               key={s}
               onClick={() => setEditShape(s)}
-              className={`p-1 rounded border-2 ${editShape === s ? 'border-purple-500 bg-purple-50' : 'border-gray-200'}`}
+              className={cn(
+                "p-1.5 rounded-xl border-2 transition-all",
+                editShape === s ? 'border-purple-500 bg-purple-50 shadow-sm' : 'border-gray-100 bg-gray-50 opacity-70'
+              )}
             >
-              <QwirkleShape shape={s} color={editColor} className="w-5 h-5" />
+              <QwirkleShape shape={s} className="w-5 h-5" style={{ color: editColor === 'purple' ? '#9333ea' : editColor === 'orange' ? '#ea580c' : editColor === 'yellow' ? '#ca8a04' : editColor === 'green' ? '#16a34a' : editColor === 'blue' ? '#2563eb' : '#dc2626' }} />
             </button>
           ))}
         </div>
-        <div className="flex gap-1">
-          <button onClick={handleSave} className="flex-1 text-[10px] font-bold bg-purple-500 text-white rounded-lg py-1 px-2">
-            Save
+        <div className="flex gap-2">
+          <button onClick={handleSave} className="flex-1 text-xs font-black bg-green-600 text-white rounded-xl py-2 shadow-sm active:scale-95 transition-transform">
+            SAVE
           </button>
-          <button onClick={() => setIsEditing(false)} className="flex-1 text-[10px] font-bold bg-gray-200 text-gray-600 rounded-lg py-1 px-2">
-            Cancel
+          <button onClick={() => setIsEditing(false)} className="flex-1 text-xs font-bold bg-gray-100 text-gray-500 rounded-xl py-2 active:scale-95 transition-transform">
+            CANCEL
           </button>
         </div>
       </div>
@@ -147,10 +134,18 @@ function EditableTileChip({
         setEditShape(tile.shape);
         setIsEditing(true);
       }}
-      className="flex items-center gap-1 bg-purple-50 rounded-lg px-2 py-1 hover:bg-purple-100 hover:ring-2 hover:ring-purple-300 transition-all cursor-pointer"
+      className={cn(
+        "flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 transition-all active:scale-95",
+        depthStyles.raised,
+        "hover:border-purple-300"
+      )}
     >
-      <QwirkleShape shape={tile.shape} color={tile.color} className={iconSize} />
-      <span className={`${textSize} font-bold capitalize text-gray-700`}>{tile.color} {tile.shape}</span>
+      <QwirkleShape 
+        shape={tile.shape} 
+        className={iconSize} 
+        style={{ color: tile.color === 'purple' ? '#9333ea' : tile.color === 'orange' ? '#ea580c' : tile.color === 'yellow' ? '#ca8a04' : tile.color === 'green' ? '#16a34a' : tile.color === 'blue' ? '#2563eb' : '#dc2626' }} 
+      />
+      <span className={`${textSize} font-black uppercase tracking-tight text-gray-700`}>{tile.color}</span>
     </button>
   );
 }
@@ -168,32 +163,34 @@ function MoveVisualizer({ tiles }: { tiles: any[] }) {
     const width = maxX - minX + 1;
     const height = maxY - minY + 1;
 
-    // Use smaller cells for larger boards
     const cellSize = width > 4 || height > 4 ? 32 : 40;
     const iconSize = width > 4 || height > 4 ? 'w-6 h-6' : 'w-8 h-8';
 
     return (
         <div className="flex justify-center my-2 overflow-x-auto">
-             <div className="grid gap-0.5 p-2 bg-slate-800 rounded-lg" style={{
+             <div className="grid gap-1 p-3 bg-gray-100 rounded-2xl shadow-inner border-b border-white" style={{
                 gridTemplateColumns: `repeat(${width}, ${cellSize}px)`,
                 gridTemplateRows: `repeat(${height}, ${cellSize}px)`
             }}>
                 {tiles.map((tile, i) => (
-                    <div key={i} className="flex items-center justify-center relative bg-slate-900 rounded" style={{
+                    <div key={i} className="flex items-center justify-center relative bg-white rounded-lg shadow-sm border border-gray-100" style={{
                         gridColumn: tile.x - minX + 1,
                         gridRow: tile.y - minY + 1,
                         width: cellSize,
                         height: cellSize,
                     }}>
-                    <QwirkleShape shape={tile.shape} color={tile.color} className={iconSize} />
+                    <QwirkleShape 
+                        shape={tile.shape} 
+                        className={iconSize} 
+                        style={{ color: tile.color === 'purple' ? '#9333ea' : tile.color === 'orange' ? '#ea580c' : tile.color === 'yellow' ? '#ca8a04' : tile.color === 'green' ? '#16a34a' : tile.color === 'blue' ? '#2563eb' : '#dc2626' }} 
+                    />
                     {tile.type === 'new' && (
-                        <div className="absolute inset-0 border-2 border-green-400 rounded animate-pulse" />
+                        <div className="absolute inset-0 border-2 border-orange-400 rounded-lg animate-pulse" />
                     )}
                     </div>
                 ))}
             </div>
         </div>
-
     )
 }
 
@@ -315,43 +312,49 @@ function FileUpload({ onFileSelect, label }: { onFileSelect: (dataUri: string) =
     };
     
     return (
-        <div className="w-full">
-            <label className="text-sm font-medium text-foreground/80">{label}</label>
+        <div className="w-full space-y-2">
+            <label className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">{label}</label>
             {view === 'upload' && (
                 <div 
-                  className="mt-1 flex justify-center items-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md cursor-pointer hover:border-primary"
+                  className={cn(
+                    "relative flex justify-center items-center px-6 pt-8 pb-10 border-2 border-dashed rounded-[2rem] cursor-pointer hover:border-orange-400 transition-all group",
+                    preview ? "border-orange-200 bg-orange-50/30" : "border-gray-200 bg-gray-50/50"
+                  )}
                   onClick={() => inputRef.current?.click()}
                 >
-                    <div className="space-y-1 text-center">
+                    <div className="space-y-3 text-center">
                         {preview ? (
-                            <Image src={preview} alt="Preview" width={100} height={100} className="mx-auto h-24 w-24 object-cover rounded-md" />
+                            <div className="relative mx-auto h-28 w-28 shadow-xl rounded-2xl overflow-hidden border-4 border-white rotate-2 group-hover:rotate-0 transition-transform">
+                                <Image src={preview} alt="Preview" fill className="object-cover" />
+                            </div>
                         ) : (
-                            <Camera className="mx-auto h-12 w-12 text-foreground/50" />
+                            <div className="mx-auto h-16 w-16 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-gray-100 group-hover:scale-110 transition-transform">
+                                <Camera className="h-8 w-8 text-gray-400 group-hover:text-orange-500 transition-colors" />
+                            </div>
                         )}
-                        <p className="text-sm text-foreground/60">
-                            {preview ? 'Click to change image' : 'Click to upload an image'}
+                        <p className="text-sm font-bold text-gray-500 group-hover:text-gray-700">
+                            {preview ? 'TAP TO CHANGE' : 'UPLOAD PHOTO'}
                         </p>
                         <input ref={inputRef} type="file" accept="image/*" className="sr-only" onChange={handleFileChange} />
                     </div>
                 </div>
             )}
             {view === 'camera' && (
-                <div className="mt-1 space-y-2">
+                <div className="space-y-3">
                     {hasCameraPermission === false ? (
-                        /* Native camera fallback when permission denied */
                         <div className="space-y-3">
-                            <Alert className="border-orange-200 bg-orange-50">
-                                <AlertTitle className="text-orange-700">Use Native Camera</AlertTitle>
-                                <AlertDescription className="text-orange-600">
+                            <Alert className="border-orange-200 bg-orange-50 rounded-2xl">
+                                <AlertTitle className="text-orange-700 font-black uppercase text-xs tracking-wider">Use Native Camera</AlertTitle>
+                                <AlertDescription className="text-orange-600 font-medium">
                                     Browser camera blocked. Tap below to open your camera app instead.
                                 </AlertDescription>
                             </Alert>
                             <Button
                                 onClick={() => cameraInputRef.current?.click()}
-                                className="w-full h-14 bg-orange-500 hover:bg-orange-600"
+                                className={cn("w-full h-16 rounded-2xl text-lg font-black", depthStyles.buttonPrimary)}
                             >
-                                <Camera className="mr-2" />
-                                Open Camera App
+                                <Camera className="mr-2 h-6 w-6" />
+                                OPEN CAMERA
                             </Button>
                             <input
                                 ref={cameraInputRef}
@@ -363,32 +366,43 @@ function FileUpload({ onFileSelect, label }: { onFileSelect: (dataUri: string) =
                             />
                         </div>
                     ) : (
-                        /* In-browser camera when permission granted */
                         <>
-                            <div className="w-full aspect-video rounded-md bg-black overflow-hidden relative">
+                            <div className="w-full aspect-[4/3] rounded-[2rem] bg-gray-900 overflow-hidden relative shadow-2xl border-4 border-white">
                                 <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
                                 {hasCameraPermission === null && (
-                                    <div className='absolute inset-0 flex items-center justify-center'>
-                                        <Loader2 className="w-8 h-8 animate-spin text-white" />
+                                    <div className='absolute inset-0 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm'>
+                                        <Loader2 className="w-10 h-10 animate-spin text-white" />
                                     </div>
                                 )}
                             </div>
 
-                            <div className="flex gap-2">
-                                <Button onClick={handleCapture} disabled={!hasCameraPermission} className="flex-1">
-                                    <Camera className="mr-2" />
-                                    Take Picture
+                            <div className="flex gap-3">
+                                <Button 
+                                    onClick={handleCapture} 
+                                    disabled={!hasCameraPermission} 
+                                    className={cn("flex-1 h-16 rounded-2xl text-lg font-black", depthStyles.buttonPrimary)}
+                                >
+                                    <Camera className="mr-2 h-6 w-6" />
+                                    TAKE PHOTO
                                 </Button>
-                                <Button onClick={toggleCamera} disabled={!hasCameraPermission} variant="outline" size="icon">
-                                    <SwitchCamera />
+                                <Button 
+                                    onClick={toggleCamera} 
+                                    disabled={!hasCameraPermission} 
+                                    variant="outline" 
+                                    className="h-16 w-16 rounded-2xl border-2 border-gray-200 bg-white"
+                                >
+                                    <SwitchCamera className="h-6 w-6 text-gray-600" />
                                 </Button>
                             </div>
                         </>
                     )}
                 </div>
             )}
-            <canvas ref={canvasRef} className="hidden" />
-            <Button variant="link" onClick={() => setView(view === 'upload' ? 'camera' : 'upload')} className="w-full">
+            <Button 
+                variant="ghost" 
+                onClick={() => setView(view === 'upload' ? 'camera' : 'upload')} 
+                className="w-full font-black text-[10px] tracking-widest text-gray-400 hover:text-orange-500 uppercase py-1"
+            >
                 {view === 'upload' ? 'Use Camera Instead' : 'Upload File Instead'}
             </Button>
         </div>
@@ -401,15 +415,15 @@ export function AiHelperDialog({ isOpen, onOpenChange, onAddScore }: AiHelperDia
   const [boardPhotoDataUri, setBoardPhotoDataUri] = useState<string | null>(null);
   const [tilesPhotoDataUri, setTilesPhotoDataUri] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('');
+  const [progress, setProgress] = useState(0);
   const [autoScoreResult, setAutoScoreResult] = useState<{ score: number, details: string } | null>(null);
   const [bestMoveResult, setBestMoveResult] = useState<BestQwirkleOptionsOutput | null>(null);
 
-  // Editable copies of AI results
   const [editedPlayerTiles, setEditedPlayerTiles] = useState<Tile[]>([]);
   const [editedBoardLines, setEditedBoardLines] = useState<BoardLine[]>([]);
   const [tilesWereEdited, setTilesWereEdited] = useState(false);
 
-  // Update functions for editable tiles
   const updatePlayerTile = (index: number, newTile: Tile) => {
     setEditedPlayerTiles(prev => prev.map((t, i) => i === index ? newTile : t));
     setTilesWereEdited(true);
@@ -424,52 +438,71 @@ export function AiHelperDialog({ isOpen, onOpenChange, onAddScore }: AiHelperDia
     setTilesWereEdited(true);
   };
 
-  // Recalculate suggestions with edited tiles (placeholder - would need backend support)
+  const startProgressSimulation = (message: string) => {
+    setLoadingMessage(message);
+    setProgress(0);
+    setIsLoading(true);
+
+    let currentProgress = 0;
+    const interval = setInterval(() => {
+      currentProgress += Math.random() * 15;
+      if (currentProgress > 90) currentProgress = 90;
+      setProgress(currentProgress);
+    }, 500);
+
+    return () => {
+      clearInterval(interval);
+      setProgress(100);
+      setTimeout(() => {
+        setIsLoading(false);
+        setProgress(0);
+      }, 300);
+    };
+  };
+
   const handleRecalculate = async () => {
     if (!boardPhotoDataUri || !tilesPhotoDataUri) return;
 
-    setIsLoading(true);
+    const completeProgress = startProgressSimulation('RECALCULATING...');
     setTilesWereEdited(false);
     try {
-      // For now, re-run the AI with the same images
-      // In a full implementation, you'd pass the edited tiles to influence the suggestions
       const result = await getBestQwirkleOptions({ boardPhotoDataUri, playerTilesPhotoDataUri: tilesPhotoDataUri });
       setBestMoveResult(result);
       setEditedPlayerTiles(result.playerTiles || []);
       setEditedBoardLines(result.boardLines || []);
-      toast({ title: "Suggestions updated!", description: "New moves calculated based on your corrections." });
+      toast({ title: "Updated!", description: "New moves calculated." });
     } catch (error) {
       console.error(error);
-      toast({ title: "Failed to recalculate.", description: "Please try again.", variant: "destructive" });
+      toast({ title: "Error", description: "Try again.", variant: "destructive" });
     } finally {
-      setIsLoading(false);
+      completeProgress();
     }
   };
 
   const handleAutoScore = async () => {
     if (!boardPhotoDataUri) {
-        toast({ title: "Please upload a photo of the board.", variant: "destructive" });
+        toast({ title: "Upload board photo first!", variant: "destructive" });
         return;
     }
-    setIsLoading(true);
+    const completeProgress = startProgressSimulation('CALCULATING...');
     setAutoScoreResult(null);
     try {
         const result = await automatedScoreCalculation({ photoDataUri: boardPhotoDataUri });
         setAutoScoreResult(result);
     } catch (error) {
         console.error(error);
-        toast({ title: "Failed to calculate score.", description: "Please try again.", variant: "destructive" });
+        toast({ title: "Error", description: "Try again.", variant: "destructive" });
     } finally {
-        setIsLoading(false);
+        completeProgress();
     }
   };
 
   const handleBestMove = async () => {
     if (!boardPhotoDataUri || !tilesPhotoDataUri) {
-        toast({ title: "Please upload photos for both board and tiles.", variant: "destructive" });
+        toast({ title: "Upload both photos!", variant: "destructive" });
         return;
     }
-    setIsLoading(true);
+    const completeProgress = startProgressSimulation('ANALYZING...');
     setBestMoveResult(null);
     setTilesWereEdited(false);
     try {
@@ -479,15 +512,14 @@ export function AiHelperDialog({ isOpen, onOpenChange, onAddScore }: AiHelperDia
         setEditedBoardLines(result.boardLines || []);
     } catch (error) {
         console.error(error);
-        toast({ title: "Failed to find best moves.", description: "Please try again.", variant: "destructive" });
+        toast({ title: "Error", description: "Try again.", variant: "destructive" });
     } finally {
-        setIsLoading(false);
+        completeProgress();
     }
   };
 
   const applyScore = (score: number, type: TurnScore['type']) => {
     onAddScore(score, type);
-    toast({ title: "Score Added!", description: `${score} points have been added to your total.`});
     handleOpenChange(false);
   };
 
@@ -499,6 +531,9 @@ export function AiHelperDialog({ isOpen, onOpenChange, onAddScore }: AiHelperDia
     setEditedPlayerTiles([]);
     setEditedBoardLines([]);
     setTilesWereEdited(false);
+    setIsLoading(false);
+    setProgress(0);
+    setLoadingMessage('');
   }
 
   const handleOpenChange = (open: boolean) => {
@@ -510,213 +545,250 @@ export function AiHelperDialog({ isOpen, onOpenChange, onAddScore }: AiHelperDia
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto rounded-[2.5rem] border-orange-50 shadow-2xl p-0">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto rounded-[2.5rem] border-none shadow-2xl p-0 bg-[#F3F4F6] [&>button]:hidden">
         <div className="p-6 space-y-6">
-            <DialogHeader>
-            <DialogTitle className="font-headline font-black text-2xl flex items-center gap-2 text-purple-600">
-                <WandSparkles className="text-yellow-400 h-8 w-8" /> 
-                AI Helper
-            </DialogTitle>
-            <DialogDescription className="font-medium text-gray-500">
-                SNAP A PHOTO • GET SMART ADVICE
-            </DialogDescription>
+            <DialogHeader className="relative">
+                <button 
+                    onClick={() => handleOpenChange(false)}
+                    className="absolute -top-2 -right-2 w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-gray-400 hover:text-gray-900 border border-gray-100 z-10"
+                >
+                    <X className="h-5 w-5" />
+                </button>
+                <DialogTitle className="font-headline font-black text-3xl flex items-center gap-3 text-purple-600 drop-shadow-sm">
+                    <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center border border-purple-100">
+                        <WandSparkles className="text-purple-500 h-7 w-7" /> 
+                    </div>
+                    AI Helper
+                </DialogTitle>
+                <DialogDescription className="font-black text-[10px] tracking-[0.2em] text-gray-400 uppercase mt-2">
+                    SMART ADVICE • EASY SCORING
+                </DialogDescription>
             </DialogHeader>
-            
-            <Tabs defaultValue="auto-score" onValueChange={() => resetState()}>
-            <TabsList className="grid w-full grid-cols-2 bg-gray-100 p-1 rounded-2xl h-14">
-                <TabsTrigger value="auto-score" className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm font-black text-xs tracking-widest uppercase">Auto Score</TabsTrigger>
-                <TabsTrigger value="best-move" className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm font-black text-xs tracking-widest uppercase">Best Move</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="auto-score" className="pt-4">
-                <div className="space-y-6">
-                    {!autoScoreResult ? (
-                    <>
-                        <div className="bg-orange-50/50 p-4 rounded-2xl border border-orange-100">
-                            <p className="text-sm font-bold text-orange-700 text-center">Take a picture of the board after your turn!</p>
-                        </div>
-                        <FileUpload onFileSelect={setBoardPhotoDataUri} label="Board Photo" />
-                        <Button 
-                            onClick={handleAutoScore} 
-                            disabled={isLoading || !boardPhotoDataUri} 
-                            className="w-full h-16 rounded-2xl bg-primary hover:bg-orange-600 text-white border-b-4 border-orange-700 active:border-b-0 active:translate-y-1 font-black text-lg shadow-md transition-all"
-                        >
-                            {isLoading ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : <Sparkles className="mr-2 h-6 w-6" />}
-                            CALCULATE SCORE
-                        </Button>
-                    </>
-                    ) : (
-                        <div className="space-y-4">
-                            <Card className="border-4 border-orange-100 rounded-[2rem] overflow-hidden shadow-sm">
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-orange-50/50 p-6">
-                                    <CardTitle className="font-black text-3xl text-orange-600 tracking-tight">
-                                        <span className="text-sm block text-orange-400 font-bold uppercase tracking-widest">Result</span>
-                                        {autoScoreResult.score} Points
-                                    </CardTitle>
-                                    <Button variant="ghost" size="sm" onClick={() => setAutoScoreResult(null)} className="font-bold text-gray-400 hover:text-orange-500">
-                                        RETRY
-                                    </Button>
-                                </CardHeader>
-                                <CardContent className="p-6 pt-4">
-                                    <p className="text-sm font-medium text-gray-600 leading-relaxed italic border-l-4 border-orange-200 pl-4">{autoScoreResult.details}</p>
-                                </CardContent>
-                                <CardFooter className="p-6 pt-0">
-                                    <Button className="w-full h-14 rounded-xl bg-green-500 hover:bg-green-600 text-white border-b-4 border-green-700 active:border-b-0 active:translate-y-1 font-black text-lg" onClick={() => applyScore(autoScoreResult.score, 'auto-score')}>
-                                        ADD TO MY TOTAL
-                                    </Button>
-                                </CardFooter>
-                            </Card>
-                        </div>
-                    )}
+
+            {isLoading && (
+              <div className={cn("p-6 rounded-[2rem] space-y-4 animate-in zoom-in duration-300", depthStyles.raised)}>
+                <div className="flex flex-col items-center space-y-4">
+                  <div className="relative">
+                    <WandSparkles className="h-12 w-12 text-purple-500 animate-bounce" />
+                    <Sparkles className="h-6 w-6 text-yellow-400 absolute -top-1 -right-1 animate-pulse" />
+                  </div>
+                  <p className="font-black text-purple-700 text-center uppercase tracking-widest text-xs">{loadingMessage}</p>
+                  <div className="w-full space-y-2">
+                    <div className={cn("h-4 w-full rounded-full overflow-hidden p-1", depthStyles.recessed)}>
+                        <div 
+                            className="h-full bg-gradient-to-r from-purple-500 to-orange-500 rounded-full transition-all duration-300" 
+                            style={{ width: `${progress}%` }}
+                        />
+                    </div>
+                  </div>
                 </div>
-            </TabsContent>
-            
-            <TabsContent value="best-move" className="pt-4">
-                <div className="space-y-6">
+              </div>
+            )}
+
+            <Tabs defaultValue="best-move" onValueChange={() => resetState()} className="space-y-6">
+                <TabsList className={cn("grid w-full grid-cols-2 p-1.5 rounded-[1.5rem] h-16", depthStyles.recessed)}>
+                    <TabsTrigger value="best-move" className="rounded-[1.25rem] data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-purple-600 font-black text-[11px] tracking-widest uppercase text-gray-400 transition-all">Best Move</TabsTrigger>
+                    <TabsTrigger value="auto-score" className="rounded-[1.25rem] data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-orange-600 font-black text-[11px] tracking-widest uppercase text-gray-400 transition-all">Auto Score</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="best-move" className="space-y-6 m-0 animate-in fade-in slide-in-from-bottom-2 duration-300">
                     {!bestMoveResult ? (
-                    <>
-                        <div className="bg-purple-50 p-4 rounded-2xl border border-purple-100">
-                            <p className="text-sm font-bold text-purple-700 text-center">Snap the board and your tiles for advice!</p>
-                        </div>
-                        <FileUpload onFileSelect={setBoardPhotoDataUri} label="Board Photo" />
-                        <FileUpload onFileSelect={setTilesPhotoDataUri} label="Your Tiles" />
+                    <div className="space-y-6">
+                        <FileUpload onFileSelect={setBoardPhotoDataUri} label="Step 1: SNAP THE BOARD" />
+                        <FileUpload onFileSelect={setTilesPhotoDataUri} label="Step 2: SNAP YOUR TILES" />
                         <Button 
                             onClick={handleBestMove} 
                             disabled={isLoading || !boardPhotoDataUri || !tilesPhotoDataUri} 
-                            className="w-full h-16 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white border-b-4 border-purple-800 active:border-b-0 active:translate-y-1 font-black text-lg shadow-md transition-all"
+                            className={cn("w-full h-20 rounded-[1.5rem] text-xl font-black tracking-tight", depthStyles.buttonPurple)}
                         >
-                            {isLoading ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : <Sparkles className="mr-2 h-6 w-6" />}
+                            {isLoading ? <Loader2 className="mr-3 h-7 w-7 animate-spin" /> : <Sparkles className="mr-3 h-7 w-7" />}
                             FIND BEST MOVES
                         </Button>
-                    </>
+                    </div>
                     ) : (
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between px-2">
-                                <h3 className="font-headline font-black text-xl text-gray-800 tracking-tight">Top Suggestions</h3>
-                                <Button variant="ghost" size="sm" onClick={() => setBestMoveResult(null)} className="font-bold text-gray-400 hover:text-purple-600">
-                                    START OVER
-                                </Button>
-                            </div>
-
-                            {/* Board preview */}
-                            {boardPhotoDataUri && (
-                              <div className="rounded-2xl overflow-hidden border-2 border-purple-100">
-                                <Image src={boardPhotoDataUri} alt="Board" width={400} height={300} className="w-full h-auto object-contain max-h-48" />
-                              </div>
-                            )}
-
-                            {/* Board lines analysis - editable */}
-                            {editedBoardLines.length > 0 && (
-                              <div className="p-3 bg-white rounded-2xl border border-purple-100 shadow-sm">
-                                <p className="font-black text-purple-400 uppercase tracking-widest text-[10px] mb-2">Board Lines <span className="text-gray-400">(tap to edit)</span></p>
-                                <div className="space-y-2">
-                                  {editedBoardLines.map((line, i) => (
-                                    <div key={i} className="flex items-start gap-2 flex-wrap">
-                                      <span className="text-[10px] font-bold text-gray-400 uppercase w-14 pt-1">{line.direction === 'horizontal' ? '→ Horiz' : '↓ Vert'}</span>
-                                      <div className="flex items-center gap-1 flex-wrap flex-1">
-                                        {line.tiles.map((tile, j) => (
-                                          <EditableTileChip
-                                            key={j}
-                                            tile={tile}
-                                            size="small"
-                                            onUpdate={(newTile) => updateBoardLineTile(i, j, newTile)}
-                                          />
-                                        ))}
-                                      </div>
-                                    </div>
-                                  ))}
+                        <div className="space-y-6 pb-4">
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between px-2">
+                                    <h3 className="font-headline font-black text-xl text-gray-800 tracking-tight">Top Suggestions</h3>
+                                    <Button variant="ghost" size="sm" onClick={() => setBestMoveResult(null)} className="font-bold text-gray-400 hover:text-purple-600">
+                                        START OVER
+                                    </Button>
                                 </div>
-                              </div>
-                            )}
 
-                            {/* Player tiles - editable */}
-                            {editedPlayerTiles.length > 0 && (
-                              <div className="p-3 bg-white rounded-2xl border border-purple-100 shadow-sm">
-                                <p className="font-black text-purple-400 uppercase tracking-widest text-[10px] mb-2">Your Tiles <span className="text-gray-400">(tap to edit)</span></p>
-                                <div className="flex flex-wrap gap-2">
-                                  {editedPlayerTiles.map((tile, i) => (
-                                    <EditableTileChip
-                                      key={i}
-                                      tile={tile}
-                                      onUpdate={(newTile) => updatePlayerTile(i, newTile)}
-                                    />
-                                  ))}
-                                </div>
-                                {/* Toggle to show hand photo */}
-                                {tilesPhotoDataUri && (
-                                  <details className="group mt-3">
-                                    <summary className="text-[10px] font-black text-purple-400 uppercase tracking-widest cursor-pointer hover:text-purple-600 flex items-center gap-1">
-                                      <span className="group-open:rotate-90 transition-transform">▶</span>
-                                      View Photo
-                                    </summary>
-                                    <div className="mt-2 rounded-xl overflow-hidden border border-purple-100">
-                                      <Image src={tilesPhotoDataUri} alt="Your tiles" width={300} height={200} className="w-full h-auto object-contain" />
+                                {/* Board preview */}
+                                {boardPhotoDataUri && (
+                                    <div className="rounded-[2rem] overflow-hidden border-4 border-white shadow-xl rotate-1">
+                                        <Image src={boardPhotoDataUri} alt="Board" width={400} height={300} className="w-full h-auto object-contain max-h-48" />
                                     </div>
-                                  </details>
                                 )}
-                              </div>
-                            )}
 
-                            {/* Recalculate button when tiles were edited */}
-                            {tilesWereEdited && (
-                              <Button
-                                onClick={handleRecalculate}
-                                disabled={isLoading}
-                                className="w-full h-12 rounded-2xl bg-green-500 hover:bg-green-600 text-white border-b-4 border-green-700 active:border-b-0 active:translate-y-1 font-black shadow-md"
-                              >
-                                {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Sparkles className="mr-2 h-5 w-5" />}
-                                RECALCULATE WITH CORRECTIONS
-                              </Button>
-                            )}
-
-                            <div className="space-y-4 pb-4">
-                                {bestMoveResult.suggestions.map((move, index) => (
-                                    <Card key={index} className="border-2 border-purple-100 rounded-[2rem] bg-purple-50/30 overflow-hidden shadow-sm">
-                                        <CardHeader className="pb-2 p-6 bg-white/50 border-b border-purple-50">
-                                            <CardTitle className="text-sm font-black text-purple-600 uppercase tracking-widest flex justify-between items-center">
-                                                <span>OPTION {index+1}</span>
-                                                <span className="bg-purple-100 px-3 py-1 rounded-full text-lg">{move.score} PTS</span>
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="p-6 space-y-3">
-                                            {/* Play These */}
-                                            <div className="bg-white p-3 rounded-2xl border border-purple-100 shadow-sm">
-                                                <p className="text-[10px] font-black text-purple-400 uppercase mb-2 tracking-widest">Play These</p>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {move.tilesToPlay.map((tile, i) => (
-                                                        <div key={i} className="flex items-center gap-1 bg-purple-50 rounded-lg px-2 py-1">
-                                                            <QwirkleShape shape={tile.shape} color={tile.color} className="w-5 h-5" />
-                                                            <span className="text-xs font-bold capitalize text-gray-700">{tile.color} {tile.shape}</span>
-                                                        </div>
+                                {/* Board Lines Correcting */}
+                                <div className={cn("p-5 rounded-[2rem] space-y-4", depthStyles.raised)}>
+                                    <div className="flex items-center justify-between">
+                                        <p className="font-black text-purple-600 uppercase tracking-[0.15em] text-[10px]">CORRECT THE BOARD</p>
+                                        <div className="h-[1px] flex-1 bg-purple-100 mx-4" />
+                                    </div>
+                                    <div className="space-y-3 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                                        {editedBoardLines.map((line, i) => (
+                                            <div key={i} className="flex items-start gap-2">
+                                                <div className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-[10px] font-black text-gray-400 shrink-0">
+                                                    {line.direction === 'horizontal' ? '→' : '↓'}
+                                                </div>
+                                                <div className="flex items-center gap-1.5 flex-wrap">
+                                                    {line.tiles.map((tile, j) => (
+                                                        <EditableTileChip
+                                                            key={j}
+                                                            tile={tile}
+                                                            size="small"
+                                                            onUpdate={(newTile) => updateBoardLineTile(i, j, newTile)}
+                                                        />
                                                     ))}
                                                 </div>
                                             </div>
+                                        ))}
+                                    </div>
+                                </div>
 
-                                            {/* Placement - full width below */}
-                                            <div className="bg-white p-3 rounded-2xl border border-purple-100 shadow-sm">
-                                                <p className="text-[10px] font-black text-purple-400 uppercase mb-1 tracking-widest">Where to Place</p>
-                                                <p className="text-sm font-medium text-gray-700 leading-snug">{move.placement}</p>
+                                {/* Hand Correcting */}
+                                <div className={cn("p-5 rounded-[2rem] space-y-4", depthStyles.raised)}>
+                                    <div className="flex items-center justify-between">
+                                        <p className="font-black text-purple-600 uppercase tracking-[0.15em] text-[10px]">CORRECT YOUR TILES</p>
+                                        <div className="h-[1px] flex-1 bg-purple-100 mx-4" />
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {editedPlayerTiles.map((tile, i) => (
+                                            <EditableTileChip
+                                                key={i}
+                                                tile={tile}
+                                                onUpdate={(newTile) => updatePlayerTile(i, newTile)}
+                                            />
+                                        ))}
+                                    </div>
+                                    {/* Toggle to show hand photo */}
+                                    {tilesPhotoDataUri && (
+                                        <details className="group mt-3">
+                                            <summary className="text-[10px] font-black text-purple-400 uppercase tracking-widest cursor-pointer hover:text-purple-600 flex items-center gap-1">
+                                                <span className="group-open:rotate-90 transition-transform">▶</span>
+                                                View Hand Photo
+                                            </summary>
+                                            <div className="mt-2 rounded-xl overflow-hidden border-2 border-white shadow-lg">
+                                                <Image src={tilesPhotoDataUri} alt="Your tiles" width={300} height={200} className="w-full h-auto object-contain" />
+                                            </div>
+                                        </details>
+                                    )}
+                                </div>
+
+                                {tilesWereEdited && (
+                                    <Button
+                                        onClick={handleRecalculate}
+                                        disabled={isLoading}
+                                        className={cn("w-full h-14 rounded-2xl text-lg font-black", depthStyles.buttonPrimary)}
+                                    >
+                                        REFRESH SUGGESTIONS
+                                    </Button>
+                                )}
+                            </div>
+
+                            <div className="space-y-4">
+                                {bestMoveResult.suggestions.map((move, index) => (
+                                    <div key={index} className={cn("rounded-[2.5rem] overflow-hidden", depthStyles.raised)}>
+                                        <div className="bg-purple-50/50 p-5 flex justify-between items-center border-b border-purple-100">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-white border-2 border-purple-200 flex items-center justify-center font-black text-purple-600 shadow-sm">
+                                                    {index+1}
+                                                </div>
+                                                <span className="font-black text-gray-800 tracking-tight uppercase text-sm">Best Option</span>
+                                            </div>
+                                            <div className="bg-white px-4 py-1.5 rounded-full border border-purple-200 shadow-sm font-black text-purple-600 text-lg">
+                                                {move.score} <span className="text-[10px] text-purple-400">PTS</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="p-6 space-y-5">
+                                            {/* Indicators */}
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div className={cn("p-3 rounded-2xl", depthStyles.recessed)}>
+                                                    <p className="text-[9px] font-black text-purple-400 uppercase mb-2 tracking-widest">Play These</p>
+                                                    <div className="flex flex-wrap gap-1.5">
+                                                        {move.tilesToPlay.map((tile, i) => (
+                                                            <QwirkleShape 
+                                                                key={i} 
+                                                                shape={tile.shape} 
+                                                                className="w-6 h-6" 
+                                                                style={{ color: tile.color === 'purple' ? '#9333ea' : tile.color === 'orange' ? '#ea580c' : tile.color === 'yellow' ? '#ca8a04' : tile.color === 'green' ? '#16a34a' : tile.color === 'blue' ? '#2563eb' : '#dc2626' }} 
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                <div className={cn("p-3 rounded-2xl flex flex-col justify-center", depthStyles.recessed)}>
+                                                     <p className="text-[9px] font-black text-purple-400 uppercase mb-1 tracking-widest">Where</p>
+                                                     <p className="text-[10px] font-bold text-gray-700 leading-tight line-clamp-2">{move.placement}</p>
+                                                </div>
                                             </div>
 
-                                            {/* Collapsible explanation */}
-                                            <details className="group">
-                                                <summary className="text-[10px] font-black text-purple-400 uppercase tracking-widest cursor-pointer hover:text-purple-600 flex items-center gap-1">
-                                                    <span className="group-open:rotate-90 transition-transform">▶</span>
-                                                    Why This Move?
-                                                </summary>
-                                                <p className="text-sm font-medium text-gray-600 leading-relaxed italic mt-2 pl-4 border-l-2 border-purple-200">{move.reasoning}</p>
-                                            </details>
-                                        </CardContent>
-                                        <CardFooter className="p-6 pt-0">
-                                            <Button className="w-full h-12 rounded-xl bg-purple-500 hover:bg-purple-600 text-white border-b-4 border-purple-700 active:border-b-0 active:translate-y-1 font-black" onClick={() => applyScore(move.score, 'helper')}>USE THIS MOVE</Button>
-                                        </CardFooter>
-                                    </Card>
+                                            <p className="text-xs font-bold text-gray-500 leading-relaxed italic border-l-4 border-purple-100 pl-4">{move.reasoning}</p>
+                                            
+                                            <Button 
+                                                className={cn("w-full h-14 rounded-2xl text-lg font-black", depthStyles.buttonPurple)}
+                                                onClick={() => applyScore(move.score, 'helper')}
+                                            >
+                                                CHOOSE THIS
+                                            </Button>
+                                        </div>
+                                    </div>
                                 ))}
                             </div>
                         </div>
                     )}
-                </div>
-            </TabsContent>
+                </TabsContent>
+
+                <TabsContent value="auto-score" className="space-y-6 m-0 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    {!autoScoreResult ? (
+                    <div className="space-y-6">
+                        <FileUpload onFileSelect={setBoardPhotoDataUri} label="Step 1: SNAP THE BOARD" />
+                        <Button 
+                            onClick={handleAutoScore} 
+                            disabled={isLoading || !boardPhotoDataUri} 
+                            className={cn("w-full h-20 rounded-[1.5rem] text-xl font-black tracking-tight", depthStyles.buttonPrimary)}
+                        >
+                            {isLoading ? <Loader2 className="mr-3 h-7 w-7 animate-spin" /> : <Sparkles className="mr-3 h-7 w-7" />}
+                            CALCULATE SCORE
+                        </Button>
+                    </div>
+                    ) : (
+                        <div className="space-y-4">
+                            <div className={cn("rounded-[2.5rem] overflow-hidden", depthStyles.raised)}>
+                                <div className="bg-orange-50 p-8 text-center border-b border-orange-100">
+                                    <span className="text-xs font-black text-orange-400 uppercase tracking-[0.2em] mb-2 block">YOUR SCORE</span>
+                                    <div className="text-7xl font-black text-orange-600 tracking-tighter drop-shadow-sm">{autoScoreResult.score}</div>
+                                </div>
+                                <div className="p-6 space-y-6">
+                                    <div className="flex items-start gap-3 bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                                        <div className="bg-white p-2 rounded-xl shadow-sm border border-gray-100 shrink-0">
+                                            <ChevronRight className="h-5 w-5 text-orange-500" />
+                                        </div>
+                                        <p className="text-sm font-bold text-gray-600 leading-relaxed italic">{autoScoreResult.details}</p>
+                                    </div>
+                                    <div className="flex gap-3">
+                                        <Button 
+                                            variant="ghost" 
+                                            onClick={() => setAutoScoreResult(null)} 
+                                            className="flex-1 h-14 rounded-2xl font-black text-xs tracking-widest text-gray-400 border-2 border-gray-100 uppercase"
+                                        >
+                                            RETRY
+                                        </Button>
+                                        <Button 
+                                            className={cn("flex-[2] h-14 rounded-2xl text-lg font-black", depthStyles.buttonPrimary)}
+                                            onClick={() => applyScore(autoScoreResult.score, 'auto-score')}
+                                        >
+                                            ADD POINTS
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </TabsContent>
             </Tabs>
         </div>
       </DialogContent>

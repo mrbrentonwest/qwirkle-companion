@@ -146,7 +146,7 @@ const bestQwirkleOptionsPrompt = ai.definePrompt({
 3. For EACH suggestion, verify the move is legal (matching color OR shape line)
 4. Do NOT confuse star (4-pointed) with starburst (8-pointed)
 5. Score = total tiles in the line(s) created/extended, NOT just new tiles`,
-  model: 'googleai/gemini-2.5-flash',
+  model: 'googleai/gemini-2.0-flash',
 });
 
 export async function getBestQwirkleOptions(input: BestQwirkleOptionsInput): Promise<BestQwirkleOptionsOutput> {
