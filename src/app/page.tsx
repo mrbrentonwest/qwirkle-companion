@@ -10,7 +10,15 @@ import { CelebrationOverlay } from '@/components/game/celebration-overlay';
 import { QwirkleShape } from '@/components/icons';
 import { ScoreHistoryDialog } from '@/components/game/score-history-dialog';
 
+import { useIdentity } from '@/contexts/identity-context';
+import { PassphraseDialog } from '@/components/identity/passphrase-dialog';
+import { SettingsSheet } from '@/components/identity/settings-sheet';
+import { UserAvatar } from '@/components/identity/user-avatar';
+
 export default function Home() {
+  const { isLoading, isIdentified } = useIdentity();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [gameHistory, setGameHistory] = useState<GameState[]>([]); // Past states for undo
   const [futureHistory, setFutureHistory] = useState<GameState[]>([]); // Future states for redo
@@ -175,14 +183,19 @@ export default function Home() {
                         <span className="text-orange-600">Qwirkle</span> Companion
                     </h1>
                 </div>
-                {gameState && (
-                    <button 
-                        onClick={() => setHistoryOpen(true)}
-                        className="bg-orange-100 hover:bg-orange-200 active:scale-95 transition-all px-3 py-1 rounded-full border border-orange-200 shadow-sm group"
-                    >
-                        <span className="text-[10px] font-black text-orange-700 uppercase tracking-widest leading-none group-hover:text-orange-800">Round {gameState.round}</span>
-                    </button>
-                )}
+                <div className="flex items-center gap-2">
+                    {gameState && (
+                        <button
+                            onClick={() => setHistoryOpen(true)}
+                            className="bg-orange-100 hover:bg-orange-200 active:scale-95 transition-all px-3 py-1 rounded-full border border-orange-200 shadow-sm group"
+                        >
+                            <span className="text-[10px] font-black text-orange-700 uppercase tracking-widest leading-none group-hover:text-orange-800">Round {gameState.round}</span>
+                        </button>
+                    )}
+                    {!isLoading && isIdentified && (
+                        <UserAvatar onClick={() => setSettingsOpen(true)} />
+                    )}
+                </div>
             </div>
         </header>
 
@@ -213,13 +226,17 @@ export default function Home() {
         />
 
         {gameState && (
-            <ScoreHistoryDialog 
-                isOpen={isHistoryOpen} 
-                onOpenChange={setHistoryOpen} 
-                players={gameState.players} 
+            <ScoreHistoryDialog
+                isOpen={isHistoryOpen}
+                onOpenChange={setHistoryOpen}
+                players={gameState.players}
                 rounds={gameState.round}
             />
         )}
+
+        {/* Identity UI */}
+        <PassphraseDialog open={!isIdentified && !isLoading} />
+        <SettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
       </div>
     </div>
   );
