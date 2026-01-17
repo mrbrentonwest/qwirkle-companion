@@ -1,3 +1,8 @@
+export interface UserIdentity {
+  passphrase: string;
+  userId: string;
+}
+
 export interface TurnScore {
     turnNumber: number;
     score: number;
