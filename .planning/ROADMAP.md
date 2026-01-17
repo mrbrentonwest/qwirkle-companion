@@ -29,7 +29,11 @@
 3. User can access settings and change their passphrase
 4. Changed passphrase persists after page refresh
 
-**Plans:** TBD (to be created during planning)
+**Plans:** 2 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Foundation & Context (localStorage hook, hashing, identity context)
+- [ ] 01-02-PLAN.md — UI & Integration (passphrase dialog, settings sheet, avatar, wiring)
 
 **Dependencies:** None (foundation phase)
 
@@ -98,3 +102,4 @@ Linear dependency chain - each phase builds on the previous.
 
 ---
 *Roadmap created: 2026-01-17*
+*Phase 1 planned: 2026-01-17*
