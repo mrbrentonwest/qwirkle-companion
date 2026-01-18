@@ -7,9 +7,9 @@
 ## Current Status
 
 **Phase:** 3 of 3 (Home & History) - IN PROGRESS
-**Plan:** 1 of ? complete
-**Progress:** [########=-] 85%
-**Last activity:** 2026-01-18 - Completed 03-01-PLAN.md (History Data Layer)
+**Plan:** 2 of ? complete
+**Progress:** [#########=] 90%
+**Last activity:** 2026-01-18 - Completed 03-02-PLAN.md (Home Screen UI)
 
 ## Project Reference
 
@@ -17,7 +17,7 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Players can track their Qwirkle game scores easily and never lose their game progress, even when accessing via ngrok on mobile.
 
-**Current focus:** Phase 3 started. History data layer complete, ready for UI.
+**Current focus:** Phase 3 progressing. Home screen components ready, need integration.
 
 ## Phase Progress
 
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 |-------|--------|-------|
 | 1 - Identity | Complete | 2/2 |
 | 2 - Persistence | Complete | 3/3 |
-| 3 - Home & History | In Progress | 1/? |
+| 3 - Home & History | In Progress | 2/? |
 
 ## Accumulated Context
 
@@ -52,6 +52,9 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 | StoredGameState type in types.ts (not firestore-game.ts) | 03-01 | Single shared type definition |
 | archiveGame sets all timestamps to now on archive | 03-01 | Fresh timestamps for archived games |
 | getGameHistory defaults to 10, ordered by completedAt desc | 03-01 | Recent games first |
+| useGameHistory uses fetchTrigger state for manual refetch | 03-02 | Simple, reliable refetch pattern |
+| GameHistoryItem shows tie badge when multiple winners | 03-02 | Clear tie indication |
+| HomeScreen shows Continue Game prominently when active | 03-02 | Primary action gets visual priority |
 
 ### Technical Notes
 
@@ -72,10 +75,12 @@ See: .planning/PROJECT.md (updated 2026-01-17)
   - Document path: `users/{userId}/activeGame/current`
   - page.tsx uses useGamePersistence for auto-save/load
   - Firestore security rules deployed
-- **Phase 3 in progress:** History data layer complete
+- **Phase 3 in progress:** History data layer and home UI complete
   - Type: `import type { StoredGameState } from '@/lib/types'`
   - CRUD: `import { archiveGame, getGameHistory } from '@/lib/firestore-game'`
   - History path: `users/{userId}/gameHistory/{auto-id}`
+  - Hook: `import { useGameHistory } from '@/hooks/use-game-history'`
+  - Components: HomeScreen, GameHistoryList, GameHistoryItem, EmptyHistory
 
 ### Blockers
 
@@ -84,11 +89,12 @@ None.
 ### TODOs
 
 - May need Firestore security rules update for gameHistory subcollection
+- Integrate home screen components into page.tsx (next plan)
 
 ## Session Continuity
 
-**Last session:** 2026-01-18T02:21:20Z
-**Stopped at:** Completed 03-01-PLAN.md (History Data Layer)
+**Last session:** 2026-01-18T02:25:50Z
+**Stopped at:** Completed 03-02-PLAN.md (Home Screen UI)
 **Resume file:** None
 
 ---
