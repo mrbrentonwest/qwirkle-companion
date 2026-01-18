@@ -2,14 +2,14 @@
 
 **Project:** Qwirkle Companion
 **Milestone:** Game Persistence & History
-**Last Updated:** 2026-01-18
+**Last Updated:** 2026-01-17
 
 ## Current Status
 
-**Phase:** 3 of 3 (Home & History) - IN PROGRESS
-**Plan:** 2 of ? complete
-**Progress:** [#########=] 90%
-**Last activity:** 2026-01-18 - Completed 03-02-PLAN.md (Home Screen UI)
+**Phase:** 3 of 3 (Home & History) - COMPLETE
+**Plan:** 3 of 3 complete
+**Progress:** [##########] 100%
+**Last activity:** 2026-01-17 - Completed 03-03-PLAN.md (Integration)
 
 ## Project Reference
 
@@ -17,7 +17,7 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Players can track their Qwirkle game scores easily and never lose their game progress, even when accessing via ngrok on mobile.
 
-**Current focus:** Phase 3 progressing. Home screen components ready, need integration.
+**Current focus:** All phases complete. Project milestone achieved.
 
 ## Phase Progress
 
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 |-------|--------|-------|
 | 1 - Identity | Complete | 2/2 |
 | 2 - Persistence | Complete | 3/3 |
-| 3 - Home & History | In Progress | 2/? |
+| 3 - Home & History | Complete | 3/3 |
 
 ## Accumulated Context
 
@@ -55,6 +55,10 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 | useGameHistory uses fetchTrigger state for manual refetch | 03-02 | Simple, reliable refetch pattern |
 | GameHistoryItem shows tie badge when multiple winners | 03-02 | Clear tie indication |
 | HomeScreen shows Continue Game prominently when active | 03-02 | Primary action gets visual priority |
+| View state controls home vs game display | 03-03 | Clean navigation between app sections |
+| Archive game before clearing active state | 03-03 | Ensure game data preserved before deletion |
+| handleEndGame is async for archiveGame | 03-03 | Proper async handling for Firestore |
+| Home button only in game view | 03-03 | Clean navigation without redundancy |
 
 ### Technical Notes
 
@@ -75,12 +79,14 @@ See: .planning/PROJECT.md (updated 2026-01-17)
   - Document path: `users/{userId}/activeGame/current`
   - page.tsx uses useGamePersistence for auto-save/load
   - Firestore security rules deployed
-- **Phase 3 in progress:** History data layer and home UI complete
+- **Phase 3 complete:** Home and history features fully operational
   - Type: `import type { StoredGameState } from '@/lib/types'`
   - CRUD: `import { archiveGame, getGameHistory } from '@/lib/firestore-game'`
   - History path: `users/{userId}/gameHistory/{auto-id}`
   - Hook: `import { useGameHistory } from '@/hooks/use-game-history'`
-  - Components: HomeScreen, GameHistoryList, GameHistoryItem, EmptyHistory
+  - Components: HomeScreen, GameHistoryList, GameHistoryItem, EmptyHistory, GameDetailDialog
+  - page.tsx: View switching (home/game), game archiving on end, home button in header
+  - Complete lifecycle: start -> play -> end -> archive -> view in history
 
 ### Blockers
 
@@ -88,14 +94,13 @@ None.
 
 ### TODOs
 
-- May need Firestore security rules update for gameHistory subcollection
-- Integrate home screen components into page.tsx (next plan)
+None - milestone complete.
 
 ## Session Continuity
 
-**Last session:** 2026-01-18T02:25:50Z
-**Stopped at:** Completed 03-02-PLAN.md (Home Screen UI)
+**Last session:** 2026-01-17T21:30:00Z
+**Stopped at:** Completed 03-03-PLAN.md (Integration) - Project milestone complete
 **Resume file:** None
 
 ---
-*State updated: 2026-01-18*
+*State updated: 2026-01-17*
