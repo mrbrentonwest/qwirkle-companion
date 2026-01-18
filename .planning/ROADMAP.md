@@ -35,7 +35,7 @@ Plans:
 - [x] 01-01-PLAN.md — Foundation & Context (localStorage hook, hashing, identity context)
 - [x] 01-02-PLAN.md — UI & Integration (passphrase dialog, settings sheet, avatar, wiring)
 
-**Status:** ✓ Complete (2026-01-17)
+**Status:** Complete (2026-01-17)
 
 **Dependencies:** None (foundation phase)
 
@@ -56,7 +56,14 @@ Plans:
 3. User can see all player scores, current turn, and round after refresh
 4. Score changes appear saved within 2 seconds (no manual save needed)
 
-**Plans:** TBD (to be created during planning)
+**Plans:** 3 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Firebase Infrastructure (initialization, anonymous auth)
+- [ ] 02-02-PLAN.md — Firestore Game Operations (CRUD, useGamePersistence hook)
+- [ ] 02-03-PLAN.md — Integration & Verification (wire into page.tsx, security rules, user verification)
+
+**Status:** Planned (2026-01-17)
 
 **Dependencies:** Phase 1 (need user identity to associate games)
 
@@ -105,3 +112,4 @@ Linear dependency chain - each phase builds on the previous.
 ---
 *Roadmap created: 2026-01-17*
 *Phase 1 planned: 2026-01-17*
+*Phase 2 planned: 2026-01-17*
