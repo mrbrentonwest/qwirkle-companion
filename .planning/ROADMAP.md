@@ -92,11 +92,11 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — Firestore Game History Operations (types extension, archiveGame, getGameHistory)
-- [ ] 03-02-PLAN.md — Home Screen Components (useGameHistory hook, HomeScreen, GameHistoryList, GameHistoryItem, EmptyHistory)
-- [ ] 03-03-PLAN.md — Integration & Verification (view switching, game archiving, GameDetailDialog, user verification)
+- [x] 03-01-PLAN.md — Firestore Game History Operations (types extension, archiveGame, getGameHistory)
+- [x] 03-02-PLAN.md — Home Screen Components (useGameHistory hook, HomeScreen, GameHistoryList, GameHistoryItem, EmptyHistory)
+- [x] 03-03-PLAN.md — Integration & Verification (view switching, game archiving, GameDetailDialog, user verification)
 
-**Status:** Planned (2026-01-18)
+**Status:** Complete (2026-01-18)
 
 **Dependencies:** Phase 2 (need persisted games to display history)
 

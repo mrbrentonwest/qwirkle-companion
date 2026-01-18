@@ -21,16 +21,16 @@ Requirements for game persistence and history milestone.
 
 ### History
 
-- [ ] **HIST-01**: Home screen shows list of past games
-- [ ] **HIST-02**: Each game shows players, final scores, and winner
-- [ ] **HIST-03**: User can tap a completed game to see turn-by-turn breakdown
-- [ ] **HIST-04**: In-progress game shows "Continue" option prominently
+- [x] **HIST-01**: Home screen shows list of past games
+- [x] **HIST-02**: Each game shows players, final scores, and winner
+- [x] **HIST-03**: User can tap a completed game to see turn-by-turn breakdown
+- [x] **HIST-04**: In-progress game shows "Continue" option prominently
 
 ### Home Screen
 
-- [ ] **HOME-01**: Home screen displays before game setup
-- [ ] **HOME-02**: "New Game" button to start fresh game
-- [ ] **HOME-03**: "Continue Game" shown when unfinished game exists
+- [x] **HOME-01**: Home screen displays before game setup
+- [x] **HOME-02**: "New Game" button to start fresh game
+- [x] **HOME-03**: "Continue Game" shown when unfinished game exists
 
 ## v2 Requirements
 
@@ -66,13 +66,13 @@ Deferred to future milestones.
 | PERS-01 | Phase 2 | Complete |
 | PERS-02 | Phase 2 | Complete |
 | PERS-03 | Phase 2 | Complete |
-| HIST-01 | Phase 3 | Pending |
-| HIST-02 | Phase 3 | Pending |
-| HIST-03 | Phase 3 | Pending |
-| HIST-04 | Phase 3 | Pending |
-| HOME-01 | Phase 3 | Pending |
-| HOME-02 | Phase 3 | Pending |
-| HOME-03 | Phase 3 | Pending |
+| HIST-01 | Phase 3 | Complete |
+| HIST-02 | Phase 3 | Complete |
+| HIST-03 | Phase 3 | Complete |
+| HIST-04 | Phase 3 | Complete |
+| HOME-01 | Phase 3 | Complete |
+| HOME-02 | Phase 3 | Complete |
+| HOME-03 | Phase 3 | Complete |
 
 **Coverage:**
 - v1 requirements: 13 total
@@ -81,4 +81,4 @@ Deferred to future milestones.
 
 ---
 *Requirements defined: 2026-01-17*
-*Last updated: 2026-01-17 after roadmap creation*
+*Last updated: 2026-01-18 after Phase 3 completion*
