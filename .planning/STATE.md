@@ -6,10 +6,10 @@
 
 ## Current Status
 
-**Phase:** 1 of 3 (Identity) - COMPLETE
-**Plan:** 2 of 2 complete
-**Progress:** [####------] 33%
-**Last activity:** 2026-01-17 - Completed 01-02-PLAN.md (Phase 1 complete)
+**Phase:** 2 of 3 (Persistence) - IN PROGRESS
+**Plan:** 1 of 3 complete
+**Progress:** [#####-----] 50%
+**Last activity:** 2026-01-17 - Completed 02-01-PLAN.md (Firebase Foundation)
 
 ## Project Reference
 
@@ -17,14 +17,14 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Players can track their Qwirkle game scores easily and never lose their game progress, even when accessing via ngrok on mobile.
 
-**Current focus:** Phase 1 complete. Ready to begin Phase 2 - Persistence.
+**Current focus:** Phase 2 - Persistence. Firebase initialized, Anonymous Auth integrated. Ready for game CRUD operations.
 
 ## Phase Progress
 
 | Phase | Status | Plans |
 |-------|--------|-------|
 | 1 - Identity | Complete | 2/2 |
-| 2 - Persistence | Pending | 0/? |
+| 2 - Persistence | In Progress | 1/3 |
 | 3 - Home & History | Pending | 0/? |
 
 ## Accumulated Context
@@ -39,6 +39,10 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 | Providers component pattern for server/client boundary | 01-02 | Keep layout.tsx server-friendly |
 | Passphrase dialog controlled via open prop | 01-02 | Parent decides visibility with !isIdentified && !isLoading |
 | Settings confirmation requires typing twice | 01-02 | Prevent accidental passphrase changes |
+| Export db and auth only from firebase singleton | 02-01 | Clean API, app not needed externally |
+| Use env.example (not .env.local.example) | 02-01 | Avoid gitignore .env* pattern |
+| Sign in anonymously only after passphrase set | 02-01 | Match existing identity flow |
+| Mark isFirebaseReady true on error | 02-01 | Firebase unavailable shouldn't block app |
 
 ### Technical Notes
 
@@ -53,10 +57,18 @@ See: .planning/PROJECT.md (updated 2026-01-17)
   - PassphraseDialog for first-time users
   - SettingsSheet for passphrase changes
   - UserAvatar in header
+- **Phase 2 progress:** Firebase foundation established
+  - Firebase singleton: `import { db, auth } from '@/lib/firebase'`
+  - Anonymous Auth integrated into IdentityContext
+  - Context provides firebaseUid and isFirebaseReady
+  - env.example documents required environment variables
 
 ### Blockers
 
-None.
+**User setup required for Firebase:**
+- Enable Anonymous Auth in Firebase Console
+- Create Firestore database in Firebase Console
+- Add Firebase config to .env.local (see env.example)
 
 ### TODOs
 
@@ -64,9 +76,9 @@ None.
 
 ## Session Continuity
 
-**Last session:** 2026-01-17T23:39:38Z
-**Stopped at:** Completed 01-02-PLAN.md (Phase 1 Identity complete)
-**Resume file:** None - Phase 2 planning needed
+**Last session:** 2026-01-18T00:31:30Z
+**Stopped at:** Completed 02-01-PLAN.md (Firebase Foundation)
+**Resume file:** None - Ready for 02-02-PLAN.md
 
 ---
 *State updated: 2026-01-17*
