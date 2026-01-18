@@ -9,9 +9,9 @@ Requirements for game persistence and history milestone.
 
 ### Identity
 
-- [ ] **IDEN-01**: User can enter a passphrase to identify themselves
-- [ ] **IDEN-02**: Passphrase is remembered on the device (localStorage)
-- [ ] **IDEN-03**: User can change their passphrase from settings
+- [x] **IDEN-01**: User can enter a passphrase to identify themselves
+- [x] **IDEN-02**: Passphrase is remembered on the device (localStorage)
+- [x] **IDEN-03**: User can change their passphrase from settings
 
 ### Persistence
 
@@ -60,9 +60,9 @@ Deferred to future milestones.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| IDEN-01 | Phase 1 | Pending |
-| IDEN-02 | Phase 1 | Pending |
-| IDEN-03 | Phase 1 | Pending |
+| IDEN-01 | Phase 1 | Complete |
+| IDEN-02 | Phase 1 | Complete |
+| IDEN-03 | Phase 1 | Complete |
 | PERS-01 | Phase 2 | Pending |
 | PERS-02 | Phase 2 | Pending |
 | PERS-03 | Phase 2 | Pending |

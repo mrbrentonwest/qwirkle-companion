@@ -32,8 +32,10 @@
 **Plans:** 2 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Foundation & Context (localStorage hook, hashing, identity context)
-- [ ] 01-02-PLAN.md — UI & Integration (passphrase dialog, settings sheet, avatar, wiring)
+- [x] 01-01-PLAN.md — Foundation & Context (localStorage hook, hashing, identity context)
+- [x] 01-02-PLAN.md — UI & Integration (passphrase dialog, settings sheet, avatar, wiring)
+
+**Status:** ✓ Complete (2026-01-17)
 
 **Dependencies:** None (foundation phase)
 
