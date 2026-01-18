@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { GameState, TurnScore } from '@/lib/types';
 import { GameSetup } from '@/components/game/game-setup';
 import { GameView } from '@/components/game/game-view';
@@ -14,10 +14,17 @@ import { useIdentity } from '@/contexts/identity-context';
 import { PassphraseDialog } from '@/components/identity/passphrase-dialog';
 import { SettingsSheet } from '@/components/identity/settings-sheet';
 import { UserAvatar } from '@/components/identity/user-avatar';
+import { useGamePersistence } from '@/hooks/use-game-persistence';
 
 export default function Home() {
-  const { isLoading, isIdentified } = useIdentity();
+  const { isLoading, isIdentified, userId, isFirebaseReady } = useIdentity();
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  // Game persistence hook - handles Firestore sync
+  const { initialGame, isLoading: isPersistenceLoading, saveGame, clearGame } = useGamePersistence({
+    userId,
+    isFirebaseReady,
+  });
 
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [gameHistory, setGameHistory] = useState<GameState[]>([]); // Past states for undo
@@ -25,6 +32,20 @@ export default function Home() {
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationScore, setCelebrationScore] = useState(0);
   const [isHistoryOpen, setHistoryOpen] = useState(false);
+
+  // Initialize gameState from Firestore when loaded
+  useEffect(() => {
+    if (initialGame && !gameState) {
+      setGameState(initialGame);
+    }
+  }, [initialGame, gameState]);
+
+  // Auto-save gameState to Firestore when it changes
+  useEffect(() => {
+    if (gameState && isFirebaseReady) {
+      saveGame(gameState);
+    }
+  }, [gameState, isFirebaseReady, saveGame]);
 
   const triggerCelebration = useCallback((score: number) => {
     setCelebrationScore(score);
@@ -127,10 +148,11 @@ export default function Home() {
     });
   };
   
-  const handleResetGame = () => {
+  const handleResetGame = async () => {
     setGameState(null);
     setGameHistory([]);
     setFutureHistory([]);
+    await clearGame();
   };
 
   const handleUndo = useCallback(() => {
@@ -200,7 +222,15 @@ export default function Home() {
         </header>
 
         <main className="flex-1 flex flex-col">
-            {!gameState ? (
+            {/* Show loading state while persistence is loading */}
+            {isPersistenceLoading && isFirebaseReady ? (
+                <div className="flex-1 flex items-center justify-center">
+                    <div className="text-center">
+                        <QwirkleShape shape="starburst" className="h-12 w-12 text-orange-500 mx-auto animate-spin" />
+                        <p className="mt-4 text-gray-500 text-sm">Loading your game...</p>
+                    </div>
+                </div>
+            ) : !gameState ? (
                 <GameSetup onStartGame={handleStartGame} />
             ) : (
                 <GameView
