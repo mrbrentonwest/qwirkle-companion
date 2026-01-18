@@ -2,11 +2,17 @@
 
 ## What This Is
 
-A mobile-friendly score-keeping companion app for the board game Qwirkle. Players use it to track scores during physical games, with AI-powered features that can analyze board photos to calculate scores and suggest optimal moves. This milestone adds game persistence and history so games survive page refreshes and players can review past games.
+A mobile-friendly score-keeping companion app for the board game Qwirkle. Players use it to track scores during physical games, with AI-powered features that can analyze board photos to calculate scores and suggest optimal moves. v1.0 adds game persistence and history so games survive page refreshes and players can review past games.
 
 ## Core Value
 
 Players can track their Qwirkle game scores easily and never lose their game progress, even when accessing via ngrok on mobile.
+
+## Current State
+
+**Version:** v1.0 (shipped 2026-01-18)
+**LOC:** ~7,700 TypeScript/TSX
+**Tech Stack:** Next.js 15, React 19, Firebase (Firestore + Anonymous Auth), Genkit (Gemini 2.0 Flash)
 
 ## Requirements
 
@@ -20,16 +26,17 @@ Players can track their Qwirkle game scores easily and never lose their game pro
 - ✓ AI-powered best move suggestions from board + hand photos — existing
 - ✓ Undo/redo for score entries — existing
 - ✓ End game with final scores display — existing
+- ✓ Passphrase-based user identity (enter once per device) — v1.0
+- ✓ Cloud persistence of game state (Firestore) — v1.0
+- ✓ Game history list on home screen (players, scores, winner) — v1.0
+- ✓ Game detail view with turn-by-turn breakdown — v1.0
+- ✓ Resume incomplete games from home screen — v1.0
+- ✓ "Continue game" prompt when opening app with unfinished game — v1.0
+- ✓ Auto-save game state on every score change — v1.0
 
 ### Active
 
-- [ ] Passphrase-based user identity (enter once per device)
-- [ ] Cloud persistence of game state (Firestore)
-- [ ] Game history list on home screen (players, scores, winner)
-- [ ] Game detail view with turn-by-turn breakdown
-- [ ] Resume incomplete games from home screen
-- [ ] "Continue game" prompt when opening app with unfinished game
-- [ ] Auto-save game state on every score change
+(None — next milestone requirements to be defined)
 
 ### Out of Scope
 
@@ -45,20 +52,20 @@ Players can track their Qwirkle game scores easily and never lose their game pro
 - Next.js 15 with App Router, React 19, TypeScript
 - Firebase Genkit for AI features (Gemini 2.0 Flash)
 - shadcn/ui + Radix for components, Tailwind for styling
-- All game state currently in React useState (no persistence)
-- Firebase SDK installed but not actively used
+- Firebase (Firestore for persistence, Anonymous Auth for user isolation)
+- Home screen as default entry point with game history
 
 **Access pattern:**
 - Primarily accessed via ngrok on mobile phone during physical Qwirkle games
-- Local storage unreliable due to changing ngrok URLs
-- Cloud storage ensures games persist across sessions
+- Cloud storage ensures games persist across sessions and devices
 
 **User flow:**
 1. Open app → see home screen with recent games and "Continue" if game in progress
 2. Enter passphrase once (stored in localStorage as device identifier)
 3. Start new game or continue existing one
 4. Play game, scores auto-save to Firestore
-5. End game or close app → game saved, can resume or view later
+5. End game → archived to history, return to home screen
+6. View past games with turn-by-turn breakdown
 
 ## Constraints
 
@@ -71,10 +78,13 @@ Players can track their Qwirkle game scores easily and never lose their game pro
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Cloud over local storage | ngrok URLs change, local storage unreliable | — Pending |
-| Passphrase over OAuth | Simpler UX, no account management, fits casual use | — Pending |
-| History on home screen | Quick access to recent games and resume option | — Pending |
-| Firestore for persistence | Already have Firebase SDK, Genkit uses Firebase ecosystem | — Pending |
+| Cloud over local storage | ngrok URLs change, local storage unreliable | ✓ Good — games persist reliably |
+| Passphrase over OAuth | Simpler UX, no account management, fits casual use | ✓ Good — zero friction identity |
+| History on home screen | Quick access to recent games and resume option | ✓ Good — immediate context |
+| Firestore for persistence | Already have Firebase SDK, Genkit uses Firebase ecosystem | ✓ Good — seamless integration |
+| SHA-256 userId as security | Passphrase hash is unguessable, simplifies security rules | ✓ Good — works for personal use |
+| Single active game | One game at a time simplifies state management | ✓ Good — matches use case |
+| 500ms save debounce | Prevent Firestore rate limits on rapid score entry | ✓ Good — no issues observed |
 
 ---
-*Last updated: 2026-01-17 after initialization*
+*Last updated: 2026-01-18 after v1.0 milestone*
