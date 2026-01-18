@@ -1,16 +1,8 @@
 'use client';
 
-import { doc, setDoc, getDoc, deleteDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, deleteDoc, collection, addDoc, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import type { GameState } from '@/lib/types';
-
-/**
- * Extends GameState with timestamp fields for Firestore storage
- */
-export interface StoredGameState extends GameState {
-  createdAt: string;
-  updatedAt: string;
-}
+import type { GameState, StoredGameState } from '@/lib/types';
 
 /**
  * Document path: users/{userId}/activeGame/current
@@ -64,4 +56,47 @@ export async function loadActiveGame(userId: string): Promise<GameState | null> 
 export async function clearActiveGame(userId: string): Promise<void> {
   const docRef = getActiveGameRef(userId);
   await deleteDoc(docRef);
+}
+
+/**
+ * Archive a completed game to the gameHistory subcollection
+ * Path: users/{userId}/gameHistory/{auto-id}
+ */
+export async function archiveGame(userId: string, gameState: GameState): Promise<string> {
+  if (!db) {
+    throw new Error('Firestore not initialized');
+  }
+  const historyRef = collection(db, 'users', userId, 'gameHistory');
+  const now = new Date().toISOString();
+
+  const docRef = await addDoc(historyRef, {
+    ...gameState,
+    createdAt: now, // Will be overwritten if gameState has createdAt
+    updatedAt: now,
+    completedAt: now,
+  });
+
+  return docRef.id;
+}
+
+/**
+ * Fetch game history ordered by completion date (most recent first)
+ * Returns up to maxGames completed games
+ */
+export async function getGameHistory(userId: string, maxGames = 10): Promise<StoredGameState[]> {
+  if (!db) {
+    throw new Error('Firestore not initialized');
+  }
+  const historyRef = collection(db, 'users', userId, 'gameHistory');
+  const q = query(
+    historyRef,
+    orderBy('completedAt', 'desc'),
+    limit(maxGames)
+  );
+
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  } as StoredGameState));
 }
