@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import type { GameState, TurnScore } from '@/lib/types';
+import type { GameState, TurnScore, StoredGameState } from '@/lib/types';
 import { GameSetup } from '@/components/game/game-setup';
 import { GameView } from '@/components/game/game-view';
 import { AppLogo } from '@/components/icons';
@@ -15,6 +15,10 @@ import { PassphraseDialog } from '@/components/identity/passphrase-dialog';
 import { SettingsSheet } from '@/components/identity/settings-sheet';
 import { UserAvatar } from '@/components/identity/user-avatar';
 import { useGamePersistence } from '@/hooks/use-game-persistence';
+import { HomeScreen } from '@/components/home/home-screen';
+import { GameDetailDialog } from '@/components/home/game-detail-dialog';
+import { useGameHistory } from '@/hooks/use-game-history';
+import { archiveGame } from '@/lib/firestore-game';
 
 export default function Home() {
   const { isLoading, isIdentified, userId, isFirebaseReady } = useIdentity();
@@ -32,8 +36,14 @@ export default function Home() {
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationScore, setCelebrationScore] = useState(0);
   const [isHistoryOpen, setHistoryOpen] = useState(false);
+  const [view, setView] = useState<'home' | 'game'>('home');
+  const [selectedGame, setSelectedGame] = useState<StoredGameState | null>(null);
+
+  // Game history hook - fetches past games from Firestore
+  const { games: historyGames, isLoading: isHistoryLoading, error: historyError, refetch: refetchHistory } = useGameHistory(userId, isFirebaseReady);
 
   // Initialize gameState from Firestore when loaded
+  // Don't auto-switch to game view - user decides from home
   useEffect(() => {
     if (initialGame && !gameState) {
       setGameState(initialGame);
@@ -54,6 +64,27 @@ export default function Home() {
 
   const dismissCelebration = useCallback(() => {
     setShowCelebration(false);
+  }, []);
+
+  // Home screen navigation handlers
+  const handleGoToHome = useCallback(() => {
+    setView('home');
+    refetchHistory();
+  }, [refetchHistory]);
+
+  const handleContinueGame = useCallback(() => {
+    setView('game');
+  }, []);
+
+  const handleNewGame = useCallback(() => {
+    setGameState(null);
+    setGameHistory([]);
+    setFutureHistory([]);
+    setView('game'); // Go to game setup
+  }, []);
+
+  const handleSelectHistoryGame = useCallback((game: StoredGameState) => {
+    setSelectedGame(game);
   }, []);
 
   const handleStartGame = (playerNames: string[]) => {
@@ -117,35 +148,49 @@ export default function Home() {
     });
   };
 
-  const handleEndGame = (bonusPlayerId: string | null) => {
-    if (!gameState) return;
+  const handleEndGame = async (bonusPlayerId: string | null) => {
+    if (!gameState || !userId) return;
 
-    setGameState((prev) => {
-      if (!prev) return null;
+    // Build final state
+    let finalPlayers = [...gameState.players];
+    if (bonusPlayerId) {
+      finalPlayers = finalPlayers.map(p => {
+        if (p.id === bonusPlayerId) {
+          const bonusScore: TurnScore = { turnNumber: gameState.round, score: 6, isQwirkle: false, type: 'bonus' };
+          return {
+            ...p,
+            scores: [...p.scores, bonusScore],
+            totalScore: p.totalScore + 6,
+          };
+        }
+        return p;
+      });
+    }
 
-      let newPlayers = [...prev.players];
+    const finalState: GameState = {
+      ...gameState,
+      players: finalPlayers,
+      isGameActive: false,
+      isGameOver: true,
+    };
 
-      if (bonusPlayerId) {
-        newPlayers = newPlayers.map(p => {
-          if (p.id === bonusPlayerId) {
-            const bonusScore: TurnScore = { turnNumber: prev.round, score: 6, isQwirkle: false, type: 'bonus' };
-            return {
-              ...p,
-              scores: [...p.scores, bonusScore],
-              totalScore: p.totalScore + 6,
-            };
-          }
-          return p;
-        });
-      }
+    // Archive to history first
+    try {
+      await archiveGame(userId, finalState);
+    } catch (err) {
+      console.error('Failed to archive game:', err);
+    }
 
-      return {
-        ...prev,
-        players: newPlayers,
-        isGameActive: false,
-        isGameOver: true,
-      };
-    });
+    // Clear active game
+    await clearGame();
+
+    // Update local state
+    setGameState(null);
+    setGameHistory([]);
+    setFutureHistory([]);
+
+    // Return to home
+    handleGoToHome();
   };
   
   const handleResetGame = async () => {
@@ -200,6 +245,16 @@ export default function Home() {
         <header className="sticky top-0 z-50 p-4 mb-2">
             <div className="bg-white/80 backdrop-blur-md rounded-2xl p-4 flex items-center justify-between shadow-[inset_0_1px_0_0_rgba(255,255,255,1.0),0_4px_6px_-1px_rgba(0,0,0,0.1)] border border-gray-200">
                 <div className="flex items-center gap-2">
+                    {view === 'game' && (
+                        <button
+                            onClick={handleGoToHome}
+                            className="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition-colors"
+                        >
+                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                            </svg>
+                        </button>
+                    )}
                     <QwirkleShape shape="starburst" className="h-8 w-8 text-orange-500 drop-shadow-sm" />
                     <h1 className="font-headline text-xl font-black text-gray-900 tracking-tight">
                         <span className="text-orange-600">Qwirkle</span> Companion
@@ -230,6 +285,16 @@ export default function Home() {
                         <p className="mt-4 text-gray-500 text-sm">Loading your game...</p>
                     </div>
                 </div>
+            ) : view === 'home' ? (
+                <HomeScreen
+                    hasActiveGame={!!gameState}
+                    onNewGame={handleNewGame}
+                    onContinueGame={handleContinueGame}
+                    games={historyGames}
+                    isLoadingHistory={isHistoryLoading}
+                    historyError={historyError}
+                    onSelectGame={handleSelectHistoryGame}
+                />
             ) : !gameState ? (
                 <GameSetup onStartGame={handleStartGame} />
             ) : (
@@ -263,6 +328,13 @@ export default function Home() {
                 rounds={gameState.round}
             />
         )}
+
+        {/* Game Detail Dialog for viewing completed games */}
+        <GameDetailDialog
+            game={selectedGame}
+            isOpen={!!selectedGame}
+            onOpenChange={(open) => !open && setSelectedGame(null)}
+        />
 
         {/* Identity UI */}
         <PassphraseDialog open={!isIdentified && !isLoading} />
