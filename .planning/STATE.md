@@ -6,10 +6,10 @@
 
 ## Current Status
 
-**Phase:** 2 of 3 (Persistence) - COMPLETE
-**Plan:** 3 of 3 complete
-**Progress:** [########--] 80%
-**Last activity:** 2026-01-18 - Completed 02-03-PLAN.md (Integration & Verification)
+**Phase:** 3 of 3 (Home & History) - IN PROGRESS
+**Plan:** 1 of ? complete
+**Progress:** [########=-] 85%
+**Last activity:** 2026-01-18 - Completed 03-01-PLAN.md (History Data Layer)
 
 ## Project Reference
 
@@ -17,7 +17,7 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Players can track their Qwirkle game scores easily and never lose their game progress, even when accessing via ngrok on mobile.
 
-**Current focus:** Phase 2 complete. Ready for Phase 3 - Home & History.
+**Current focus:** Phase 3 started. History data layer complete, ready for UI.
 
 ## Phase Progress
 
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 |-------|--------|-------|
 | 1 - Identity | Complete | 2/2 |
 | 2 - Persistence | Complete | 3/3 |
-| 3 - Home & History | Pending | 0/? |
+| 3 - Home & History | In Progress | 1/? |
 
 ## Accumulated Context
 
@@ -49,6 +49,9 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 | Security rules allow any auth user to any userId path | 02-03 | SHA-256 unguessability provides security |
 | Game state initializes from Firestore before showing UI | 02-03 | Prevent flash of empty state |
 | Save triggered on every gameState change via useEffect | 02-03 | Automatic persistence without manual save |
+| StoredGameState type in types.ts (not firestore-game.ts) | 03-01 | Single shared type definition |
+| archiveGame sets all timestamps to now on archive | 03-01 | Fresh timestamps for archived games |
+| getGameHistory defaults to 10, ordered by completedAt desc | 03-01 | Recent games first |
 
 ### Technical Notes
 
@@ -69,20 +72,24 @@ See: .planning/PROJECT.md (updated 2026-01-17)
   - Document path: `users/{userId}/activeGame/current`
   - page.tsx uses useGamePersistence for auto-save/load
   - Firestore security rules deployed
+- **Phase 3 in progress:** History data layer complete
+  - Type: `import type { StoredGameState } from '@/lib/types'`
+  - CRUD: `import { archiveGame, getGameHistory } from '@/lib/firestore-game'`
+  - History path: `users/{userId}/gameHistory/{auto-id}`
 
 ### Blockers
 
-None - ready for Phase 3.
+None.
 
 ### TODOs
 
-None.
+- May need Firestore security rules update for gameHistory subcollection
 
 ## Session Continuity
 
-**Last session:** 2026-01-18T01:16:45Z
-**Stopped at:** Completed 02-03-PLAN.md (Integration & Verification) - Phase 2 COMPLETE
-**Resume file:** None - Ready for Phase 3 planning
+**Last session:** 2026-01-18T02:21:20Z
+**Stopped at:** Completed 03-01-PLAN.md (History Data Layer)
+**Resume file:** None
 
 ---
 *State updated: 2026-01-18*
