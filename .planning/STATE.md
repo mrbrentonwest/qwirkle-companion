@@ -7,9 +7,9 @@
 ## Current Status
 
 **Phase:** 2 of 3 (Persistence) - IN PROGRESS
-**Plan:** 1 of 3 complete
-**Progress:** [#####-----] 50%
-**Last activity:** 2026-01-17 - Completed 02-01-PLAN.md (Firebase Foundation)
+**Plan:** 2 of 3 complete
+**Progress:** [######----] 60%
+**Last activity:** 2026-01-17 - Completed 02-02-PLAN.md (Game CRUD & Persistence Hook)
 
 ## Project Reference
 
@@ -17,14 +17,14 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Players can track their Qwirkle game scores easily and never lose their game progress, even when accessing via ngrok on mobile.
 
-**Current focus:** Phase 2 - Persistence. Firebase initialized, Anonymous Auth integrated. Ready for game CRUD operations.
+**Current focus:** Phase 2 - Persistence. Firebase initialized, CRUD and persistence hook ready. Next: wire into game UI.
 
 ## Phase Progress
 
 | Phase | Status | Plans |
 |-------|--------|-------|
 | 1 - Identity | Complete | 2/2 |
-| 2 - Persistence | In Progress | 1/3 |
+| 2 - Persistence | In Progress | 2/3 |
 | 3 - Home & History | Pending | 0/? |
 
 ## Accumulated Context
@@ -43,6 +43,9 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 | Use env.example (not .env.local.example) | 02-01 | Avoid gitignore .env* pattern |
 | Sign in anonymously only after passphrase set | 02-01 | Match existing identity flow |
 | Mark isFirebaseReady true on error | 02-01 | Firebase unavailable shouldn't block app |
+| Only set initialGame on first snapshot | 02-02 | Consumer manages state after initial load |
+| 500ms debounce for Firestore saves | 02-02 | Prevent rate limit issues (1 write/sec) |
+| Preserve createdAt by reading existing doc | 02-02 | Only updatedAt changes on subsequent saves |
 
 ### Technical Notes
 
@@ -57,11 +60,13 @@ See: .planning/PROJECT.md (updated 2026-01-17)
   - PassphraseDialog for first-time users
   - SettingsSheet for passphrase changes
   - UserAvatar in header
-- **Phase 2 progress:** Firebase foundation established
+- **Phase 2 progress:** Firebase + CRUD operations ready
   - Firebase singleton: `import { db, auth } from '@/lib/firebase'`
   - Anonymous Auth integrated into IdentityContext
   - Context provides firebaseUid and isFirebaseReady
-  - env.example documents required environment variables
+  - CRUD: `import { saveActiveGame, loadActiveGame, clearActiveGame } from '@/lib/firestore-game'`
+  - Hook: `useGamePersistence({ userId, isFirebaseReady })` returns initialGame, saveGame, clearGame
+  - Document path: `users/{userId}/activeGame/current`
 
 ### Blockers
 
@@ -76,9 +81,9 @@ None.
 
 ## Session Continuity
 
-**Last session:** 2026-01-18T00:31:30Z
-**Stopped at:** Completed 02-01-PLAN.md (Firebase Foundation)
-**Resume file:** None - Ready for 02-02-PLAN.md
+**Last session:** 2026-01-18T00:35:29Z
+**Stopped at:** Completed 02-02-PLAN.md (Game CRUD & Persistence Hook)
+**Resume file:** None - Ready for 02-03-PLAN.md
 
 ---
 *State updated: 2026-01-17*
