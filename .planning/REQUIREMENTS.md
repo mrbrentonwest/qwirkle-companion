@@ -15,9 +15,9 @@ Requirements for game persistence and history milestone.
 
 ### Persistence
 
-- [ ] **PERS-01**: Game state auto-saves to Firestore on every score change
-- [ ] **PERS-02**: Game state includes all players, scores, current turn, round
-- [ ] **PERS-03**: Game loads from Firestore on app open (if in-progress game exists)
+- [x] **PERS-01**: Game state auto-saves to Firestore on every score change
+- [x] **PERS-02**: Game state includes all players, scores, current turn, round
+- [x] **PERS-03**: Game loads from Firestore on app open (if in-progress game exists)
 
 ### History
 
@@ -63,9 +63,9 @@ Deferred to future milestones.
 | IDEN-01 | Phase 1 | Complete |
 | IDEN-02 | Phase 1 | Complete |
 | IDEN-03 | Phase 1 | Complete |
-| PERS-01 | Phase 2 | Pending |
-| PERS-02 | Phase 2 | Pending |
-| PERS-03 | Phase 2 | Pending |
+| PERS-01 | Phase 2 | Complete |
+| PERS-02 | Phase 2 | Complete |
+| PERS-03 | Phase 2 | Complete |
 | HIST-01 | Phase 3 | Pending |
 | HIST-02 | Phase 3 | Pending |
 | HIST-03 | Phase 3 | Pending |

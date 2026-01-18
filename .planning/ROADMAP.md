@@ -59,11 +59,11 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Firebase Infrastructure (initialization, anonymous auth)
-- [ ] 02-02-PLAN.md — Firestore Game Operations (CRUD, useGamePersistence hook)
-- [ ] 02-03-PLAN.md — Integration & Verification (wire into page.tsx, security rules, user verification)
+- [x] 02-01-PLAN.md — Firebase Infrastructure (initialization, anonymous auth)
+- [x] 02-02-PLAN.md — Firestore Game Operations (CRUD, useGamePersistence hook)
+- [x] 02-03-PLAN.md — Integration & Verification (wire into page.tsx, security rules, user verification)
 
-**Status:** Planned (2026-01-17)
+**Status:** Complete (2026-01-18)
 
 **Dependencies:** Phase 1 (need user identity to associate games)
 
