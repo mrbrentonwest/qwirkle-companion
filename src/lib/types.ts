@@ -24,3 +24,13 @@ export interface GameState {
     isGameActive: boolean;
     isGameOver: boolean;
 }
+
+/**
+ * Extends GameState with Firestore storage metadata
+ */
+export interface StoredGameState extends GameState {
+  id?: string;           // Firestore document ID (set when retrieved)
+  createdAt: string;     // ISO timestamp when game started
+  updatedAt: string;     // ISO timestamp of last update
+  completedAt?: string;  // ISO timestamp when game ended (history only)
+}
